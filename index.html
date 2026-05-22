@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GDPR Compliance Toolkit</title>
+<style>
+  :root{--ink:#111;--mut:#666;--ln:#e5e7eb;--bg:#fafafa}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.55 -apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:#0b1020;color:#fff;padding:28px 20px}
+  header .wrap{max-width:1080px;margin:0 auto}
+  header h1{margin:0 0 6px;font-size:22px}
+  header p{margin:0;color:#cbd5e1;font-size:13px}
+  main{max-width:1080px;margin:24px auto;padding:0 20px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:14px;text-decoration:none;color:inherit;display:block;transition:.15s}
+  .card:hover{border-color:#94a3b8;transform:translateY(-1px)}
+  .card h2{margin:0 0 4px;font-size:15px}
+  .card p{margin:0;color:var(--mut);font-size:12px}
+  .badge{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:#eef2f7;color:#374151;margin-right:6px}
+  .notice{background:#fff8e1;border:1px solid #f0e0a0;border-radius:8px;padding:8px 12px;color:#6b5b00;font-size:12px;margin:16px 0}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>GDPR Compliance Toolkit</h1>
+  <p>Client-side, single-file tools for DPIAs, breach notifications, contracts and international transfers. Your data stays in your browser.</p>
+</div></header>
+<main>
+  <div class="notice">All tools run entirely in your browser. Records are stored in <code>localStorage</code>. Nothing is sent to a server.</div>
+  <div class="grid">
+    <a class="card" href="dashboard.html"><span class="badge">Overview</span><h2>🛡️ Dashboard</h2><p>Unified hub across all six tools — search, filters, KPIs, export bundle.</p></a>
+    <a class="card" href="dpia.html"><span class="badge">Art. 35</span><h2>📋 DPIA</h2><p>Data Protection Impact Assessment with AI Act overlay and Schrems II sub-module.</p></a>
+    <a class="card" href="breach.html"><span class="badge">Art. 33/34</span><h2>🚨 Breach Notification</h2><p>72-hour notification wizard, severity scoring, regulator/subject letter generators.</p></a>
+    <a class="card" href="dpa.html"><span class="badge">Art. 28</span><h2>🤝 DPA Generator</h2><p>Controller–Processor agreement with SCCs (2021/914) and three annexes.</p></a>
+    <a class="card" href="nda.html"><span class="badge">Triage</span><h2>🔒 NDA Triage</h2><p>Mutual/one-way NDA reviewer with redline suggestions.</p></a>
+    <a class="card" href="contract.html"><span class="badge">Review</span><h2>📑 Contract Review AI</h2><p>Paste-in risk-flagger across 12 categories with heat-map and redlines.</p></a>
+    <a class="card" href="transfer.html"><span class="badge">Chapter V</span><h2>🌐 Transfer Advisor</h2><p>Adequacy / SCCs / BCRs / Art. 49 decision tree + EDPB 01/2020 TIA memo.</p></a>
+  </div>
+</main>
+</body>
+</html>
