@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NDA Triage — GDPR Toolkit</title>
+<style>
+:root{--bg:#0b1020;--panel:#121933;--ink:#e8ecf7;--muted:#9aa3c0;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--accent:#6366f1;--line:#26305a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:#0a0f24;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;flex:1}
+header a,header select,header button{color:var(--ink);background:#1a2347;border:1px solid var(--line);border-radius:8px;padding:6px 10px;text-decoration:none;font-size:13px;cursor:pointer}
+header a:hover,header button:hover{border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-12{grid-column:span 12}
+@media (max-width:780px){.col-6,.col-4,.col-3{grid-column:span 12}}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;background:#0e1530;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font:inherit}
+textarea{min-height:80px;resize:vertical}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line)}
+.pill.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
+.pill.warn{background:rgba(245,158,11,.12);color:#fcd34d;border-color:#78350f}
+.pill.bad{background:rgba(239,68,68,.12);color:#fca5a5;border-color:#7f1d1d}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.steps button{background:#0e1530;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:999px;cursor:pointer;font-size:12px}
+.steps button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600}
+.btn.alt{background:#1a2347;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.findings li{margin:6px 0}
+.findings .bad{color:#fca5a5}.findings .warn{color:#fcd34d}.findings .ok{color:#86efac}
+small.hint{color:var(--muted)}
+h2{font-size:15px;margin:0 0 8px 0}
+h3{font-size:13px;margin:14px 0 6px 0;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kv{display:grid;grid-template-columns:160px 1fr;gap:6px 12px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>NDA Triage <small class="hint">· GDPR Toolkit</small></h1>
+  <a href="dashboard.html">← Dashboard</a>
+  <a href="dpia.html">DPIA</a>
+  <a href="breach.html">Breach</a>
+  <select id="lang" aria-label="Language">
+    <option value="en">EN</option><option value="fr">FR</option><option value="de">DE</option><option value="it">IT</option>
+  </select>
+</header>
+<main>
+  <div class="card">
+    <div class="steps" id="steps"></div>
+    <div id="stepBody"></div>
+    <div class="actions">
+      <button class="btn alt" id="btnPrev">← Prev</button>
+      <button class="btn" id="btnNext">Next →</button>
+      <button class="btn alt" id="btnAssess">Assess</button>
+      <button class="btn alt" id="btnSave">Save</button>
+      <button class="btn alt" id="btnLoad">Load</button>
+      <button class="btn alt" id="btnHTML">Export HTML</button>
+      <button class="btn alt" id="btnJSON">Export JSON</button>
+      <button class="btn alt" id="btnPrint">Print</button>
+    </div>
+  </div>
+  <div class="card" id="resultCard" style="display:none">
+    <h2>Triage Result</h2>
+    <div id="resultSummary"></div>
+    <h3>Findings</h3>
+    <ul class="findings" id="findings"></ul>
+    <h3>Recommended Redlines</h3>
+    <ul class="findings" id="redlines"></ul>
+  </div>
+</main>
+<script>
+/* === END PART 1 === */
+const I18N = {
+  en:{title:"NDA Triage",steps:["Parties","Scope","Data","Transfers","Obligations","Review"]},
+  fr:{title:"Triage NDA",steps:["Parties","Portée","Données","Transferts","Obligations","Revue"]},
+  de:{title:"NDA-Triage",steps:["Parteien","Umfang","Daten","Transfers","Pflichten","Prüfung"]},
+  it:{title:"Triage NDA",steps:["Parti","Ambito","Dati","Trasferimenti","Obblighi","Revisione"]}
+};
+let STEP = 1;
+const STATE = {
+  meta:{id:null,type:"nda",ref_no:"",owner:"",counterparty:"",status:"draft",saved_at:null},
+  parties:{kind:"mutual",role:"vendor",jurisdiction:"EU"},
+  scope:{purpose:"",term_months:24,survival_months:36},
+  data:{personal_data:false,special_categories:false,volume:"low",categories:""},
+  transfers:{cross_border:false,destinations:"",mechanism:"none"},
+  obligations:{subprocessing:false,audit_right:false,breach_notice_hours:72,return_delete:true,retention_after_term_days:30,governing_law:"",venue:""},
+  notes:""
+};
+function $(id){return document.getElementById(id)}
+function t(){return I18N[localStorage.getItem("dpia_lang")||"en"]||I18N.en;}
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function renderSteps(){
+  const s=t().steps;
+  $("steps").innerHTML=s.map((label,i)=>`<button data-step="${i+1}" class="${STEP===i+1?'active':''}">${i+1}. ${esc(label)}</button>`).join("");
+  [...$("steps").querySelectorAll("button")].forEach(b=>b.onclick=()=>go(parseInt(b.dataset.step,10)));
+}
+function go(n){
+  STEP=Math.max(1,Math.min(6,n));
+  renderSteps();
+  const body=$("stepBody");
+  if(STEP===1){
+    body.innerHTML=`<h2>1. Parties</h2><div class="row">
+      <div class="col-4"><label>Reference no.</label><input id="ref_no" value="${esc(STATE.meta.ref_no)}"/></div>
+      <div class="col-4"><label>Owner</label><input id="owner" value="${esc(STATE.meta.owner)}"/></div>
+      <div class="col-4"><label>Counterparty</label><input id="counterparty" value="${esc(STATE.meta.counterparty)}"/></div>
+      <div class="col-4"><label>NDA kind</label><select id="kind">
+        <option value="mutual" ${STATE.parties.kind==='mutual'?'selected':''}>Mutual</option>
+        <option value="one_way_in" ${STATE.parties.kind==='one_way_in'?'selected':''}>One-way (we receive)</option>
+        <option value="one_way_out" ${STATE.parties.kind==='one_way_out'?'selected':''}>One-way (we disclose)</option>
+      </select></div>
+      <div class="col-4"><label>Counterparty role</label><select id="role">
+        <option value="vendor" ${STATE.parties.role==='vendor'?'selected':''}>Vendor / Processor</option>
+        <option value="partner" ${STATE.parties.role==='partner'?'selected':''}>Partner / Joint Controller</option>
+        <option value="employee" ${STATE.parties.role==='employee'?'selected':''}>Employee / Contractor</option>
+        <option value="investor" ${STATE.parties.role==='investor'?'selected':''}>Investor / M&amp;A</option>
+      </select></div>
+      <div class="col-4"><label>Our jurisdiction</label><select id="jurisdiction">
+        <option value="EU" ${STATE.parties.jurisdiction==='EU'?'selected':''}>EU/EEA</option>
+        <option value="UK" ${STATE.parties.jurisdiction==='UK'?'selected':''}>UK</option>
+        <option value="CH" ${STATE.parties.jurisdiction==='CH'?'selected':''}>Switzerland</option>
+        <option value="OTHER" ${STATE.parties.jurisdiction==='OTHER'?'selected':''}>Other</option>
+      </select></div></div>`;
+  }
+  if(STEP===2){
+    body.innerHTML=`<h2>2. Scope</h2><div class="row">
+      <div class="col-12"><label>Defined purpose of disclosure</label><textarea id="purpose">${esc(STATE.scope.purpose)}</textarea>
+        <small class="hint">Narrow purpose limits mission creep (Art. 5(1)(b)).</small></div>
+      <div class="col-6"><label>Term (months)</label><input id="term_months" type="number" value="${STATE.scope.term_months}"/></div>
+      <div class="col-6"><label>Survival after termination (months)</label><input id="survival_months" type="number" value="${STATE.scope.survival_months}"/></div></div>`;
+  }
+  if(STEP===3){
+    body.innerHTML=`<h2>3. Personal data exchanged</h2><div class="row">
+      <div class="col-6"><label><input type="checkbox" id="personal_data" ${STATE.data.personal_data?'checked':''}/> Personal data is exchanged</label></div>
+      <div class="col-6"><label><input type="checkbox" id="special_categories" ${STATE.data.special_categories?'checked':''}/> Special categories or criminal data (Art. 9/10)</label></div>
+      <div class="col-6"><label>Volume</label><select id="volume">
+        <option value="low" ${STATE.data.volume==='low'?'selected':''}>Low (&lt; 1k)</option>
+        <option value="med" ${STATE.data.volume==='med'?'selected':''}>Medium (1k–100k)</option>
+        <option value="high" ${STATE.data.volume==='high'?'selected':''}>High (&gt; 100k)</option>
+      </select></div>
+      <div class="col-6"><label>Categories of data</label><input id="categories" value="${esc(STATE.data.categories)}" placeholder="names, contact, financial, health…"/></div></div>`;
+  }
+  if(STEP===4){
+    body.innerHTML=`<h2>4. Cross-border transfers</h2><div class="row">
+      <div class="col-6"><label><input type="checkbox" id="cross_border" ${STATE.transfers.cross_border?'checked':''}/> Data leaves EU/EEA/UK/CH</label></div>
+      <div class="col-6"><label>Destination(s)</label><input id="destinations" value="${esc(STATE.transfers.destinations)}" placeholder="US, India, …"/></div>
+      <div class="col-12"><label>Transfer mechanism</label><select id="mechanism">
+        <option value="none" ${STATE.transfers.mechanism==='none'?'selected':''}>None / not addressed</option>
+        <option value="adequacy" ${STATE.transfers.mechanism==='adequacy'?'selected':''}>Adequacy decision</option>
+        <option value="sccs" ${STATE.transfers.mechanism==='sccs'?'selected':''}>SCCs (2021/914)</option>
+        <option value="bcr" ${STATE.transfers.mechanism==='bcr'?'selected':''}>Binding Corporate Rules</option>
+        <option value="derogation" ${STATE.transfers.mechanism==='derogation'?'selected':''}>Art. 49 derogation</option>
+        <option value="dpf" ${STATE.transfers.mechanism==='dpf'?'selected':''}>EU-US Data Privacy Framework</option>
+      </select><small class="hint">If cross-border and mechanism is "none", we flag this.</small></div></div>`;
+  }
+  if(STEP===5){
+    body.innerHTML=`<h2>5. Obligations</h2><div class="row">
+      <div class="col-6"><label><input type="checkbox" id="subprocessing" ${STATE.obligations.subprocessing?'checked':''}/> Sub-processing allowed</label></div>
+      <div class="col-6"><label><input type="checkbox" id="audit_right" ${STATE.obligations.audit_right?'checked':''}/> Audit right</label></div>
+      <div class="col-4"><label>Breach notice (hours)</label><input id="breach_notice_hours" type="number" value="${STATE.obligations.breach_notice_hours}"/></div>
+      <div class="col-4"><label>Retention after term (days)</label><input id="retention_after_term_days" type="number" value="${STATE.obligations.retention_after_term_days}"/></div>
+      <div class="col-4"><label><input type="checkbox" id="return_delete" ${STATE.obligations.return_delete?'checked':''}/> Return-or-delete</label></div>
+      <div class="col-6"><label>Governing law</label><input id="governing_law" value="${esc(STATE.obligations.governing_law)}"/></div>
+      <div class="col-6"><label>Venue</label><input id="venue" value="${esc(STATE.obligations.venue)}"/></div>
+      <div class="col-12"><label>Notes</label><textarea id="notes">${esc(STATE.notes)}</textarea></div></div>`;
+  }
+  if(STEP===6){
+    body.innerHTML=`<h2>6. Review &amp; Assess</h2>
+      <p>Click <b>Assess</b> to score against GDPR red lines, then <b>Save</b> and <b>Export</b>.</p>
+      <div class="kv">
+        <div>Ref</div><div>${esc(STATE.meta.ref_no)||"—"}</div>
+        <div>Counterparty</div><div>${esc(STATE.meta.counterparty)||"—"}</div>
+        <div>Kind</div><div>${esc(STATE.parties.kind)}</div>
+        <div>Personal data?</div><div>${STATE.data.personal_data?"Yes":"No"} ${STATE.data.special_categories?"(special cats)":""}</div>
+        <div>Cross-border?</div><div>${STATE.transfers.cross_border?(esc(STATE.transfers.destinations)||"yes"):"no"} · ${esc(STATE.transfers.mechanism)}</div>
+      </div>`;
+  }
+}
+function collect(){
+  const v=id=>{const el=$(id);if(!el)return undefined;return el.type==='checkbox'?el.checked:el.value;};
+  if(STEP===1){
+    STATE.meta.ref_no=v("ref_no")??STATE.meta.ref_no;
+    STATE.meta.owner=v("owner")??STATE.meta.owner;
+    STATE.meta.counterparty=v("counterparty")??STATE.meta.counterparty;
+    STATE.parties.kind=v("kind")??STATE.parties.kind;
+    STATE.parties.role=v("role")??STATE.parties.role;
+    STATE.parties.jurisdiction=v("jurisdiction")??STATE.parties.jurisdiction;
+  }
+  if(STEP===2){
+    STATE.scope.purpose=v("purpose")??STATE.scope.purpose;
+    STATE.scope.term_months=parseInt(v("term_months")||"0",10);
+    STATE.scope.survival_months=parseInt(v("survival_months")||"0",10);
+  }
+  if(STEP===3){
+    STATE.data.personal_data=!!v("personal_data");
+    STATE.data.special_categories=!!v("special_categories");
+    STATE.data.volume=v("volume")??STATE.data.volume;
+    STATE.data.categories=v("categories")??STATE.data.categories;
+  }
+  if(STEP===4){
+    STATE.transfers.cross_border=!!v("cross_border");
+    STATE.transfers.destinations=v("destinations")??STATE.transfers.destinations;
+    STATE.transfers.mechanism=v("mechanism")??STATE.transfers.mechanism;
+  }
+  if(STEP===5){
+    STATE.obligations.subprocessing=!!v("subprocessing");
+    STATE.obligations.audit_right=!!v("audit_right");
+    STATE.obligations.breach_notice_hours=parseInt(v("breach_notice_hours")||"0",10);
+    STATE.obligations.retention_after_term_days=parseInt(v("retention_after_term_days")||"0",10);
+    STATE.obligations.return_delete=!!v("return_delete");
+    STATE.obligations.governing_law=v("governing_law")??STATE.obligations.governing_law;
+    STATE.obligations.venue=v("venue")??STATE.obligations.venue;
+    STATE.notes=v("notes")??STATE.notes;
+  }
+}
+function assess(){
+  collect();
+  const f=[],r=[];
+  if(STATE.data.personal_data&&STATE.transfers.cross_border&&STATE.transfers.mechanism==="none"){
+    f.push({level:"bad",msg:"Cross-border transfer of personal data with NO transfer mechanism (Art. 44–49)."});
+    r.push("Add SCCs (2021/914) or rely on adequacy/DPF; include Schrems II transfer impact assessment.");
+  }
+  if(STATE.data.special_categories&&STATE.parties.kind!=="mutual"){
+    f.push({level:"warn",msg:"Special-category data under a one-way NDA — consider mutual obligations."});
+    r.push("Upgrade to mutual confidentiality where special-category data flows both ways.");
+  }
+  if(STATE.data.personal_data&&!STATE.obligations.return_delete){
+    f.push({level:"bad",msg:"No return-or-delete obligation on termination."});
+    r.push("Add return-or-delete clause with certification of destruction within 30 days.");
+  }
+  if(STATE.data.personal_data&&STATE.obligations.breach_notice_hours>72){
+    f.push({level:"bad",msg:`Breach notice ${STATE.obligations.breach_notice_hours}h exceeds Art. 33 (72h).`});
+    r.push("Tighten breach notice to ≤ 24h so the controller can meet 72h obligation.");
+  } else if(STATE.data.personal_data&&STATE.obligations.breach_notice_hours===0){
+    f.push({level:"warn",msg:"Breach notice timing not specified."});
+    r.push("State an explicit breach notice window (e.g., 24h after awareness).");
+  }
+  if(STATE.obligations.subprocessing&&STATE.parties.role==="vendor"){
+    f.push({level:"warn",msg:"Sub-processing permitted — ensure flow-down and prior written authorization."});
+    r.push("Require sub-processor list, 30-day objection right, and back-to-back Art. 28 obligations.");
+  }
+  if(!STATE.obligations.audit_right&&STATE.parties.role==="vendor"&&STATE.data.personal_data){
+    f.push({level:"warn",msg:"No audit right against vendor handling personal data."});
+    r.push("Add audit/inspection right (or third-party report) per Art. 28(3)(h).");
+  }
+  if(STATE.scope.survival_months<24){
+    f.push({level:"warn",msg:"Survival under 24 months may be too short for trade secrets."});
+    r.push("Consider 3–5 years survival for general info, indefinite for trade secrets.");
+  }
+  if(!STATE.scope.purpose||STATE.scope.purpose.length<10){
+    f.push({level:"warn",msg:"Purpose of disclosure missing or too vague."});
+    r.push("Define a narrow, specific purpose (e.g., 'evaluation of proposed integration of X into Y').");
+  }
+  if(STATE.parties.jurisdiction!=="EU"&&STATE.parties.jurisdiction!=="UK"&&STATE.parties.jurisdiction!=="CH"&&STATE.data.personal_data){
+    f.push({level:"warn",msg:"Our jurisdiction outside EU/UK/CH — GDPR may still apply (Art. 3)."});
+    r.push("Confirm Art. 3 applicability and add explicit GDPR compliance clause.");
+  }
+  const bad=f.filter(x=>x.level==="bad").length;
+  const warn=f.filter(x=>x.level==="warn").length;
+  const band=bad>0?"High":(warn>=3?"Medium":(warn>0?"Low-Medium":"Low"));
+  $("resultCard").style.display="block";
+  $("resultSummary").innerHTML=`<div class="kv">
+    <div>Risk band</div><div><span class="pill ${bad>0?'bad':(warn>0?'warn':'ok')}">${band}</span></div>
+    <div>Red flags</div><div>${bad}</div>
+    <div>Warnings</div><div>${warn}</div></div>`;
+  $("findings").innerHTML=f.length?f.map(x=>`<li class="${x.level}">${esc(x.msg)}</li>`).join(""):"<li class='ok'>No issues detected.</li>";
+  $("redlines").innerHTML=r.length?r.map(x=>`<li>${esc(x)}</li>`).join(""):"<li>None.</li>";
+  STATE._assessment={band,bad,warn,findings:f,redlines:r,at:new Date().toISOString()};
+}
+/* === END PART 2 === */
+function registry(){
+  try{return JSON.parse(localStorage.getItem("nda_registry_v1")||"{}");}catch(e){return {};}
+}
+function writeRegistry(reg){localStorage.setItem("nda_registry_v1",JSON.stringify(reg));}
+function saveLocal(){
+  collect();
+  if(!STATE.meta.id) STATE.meta.id="nda_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,6);
+  STATE.meta.saved_at=new Date().toISOString();
+  const reg=registry();
+  reg[STATE.meta.id]=STATE;
+  writeRegistry(reg);
+  alert("Saved. ID: "+STATE.meta.id);
+}
+function loadLocal(){
+  const id=prompt("Enter NDA ID to load:");
+  if(!id) return;
+  const reg=registry();
+  if(!reg[id]){alert("Not found.");return;}
+  Object.assign(STATE,reg[id]);
+  go(1);
+}
+function buildReportHTML(){
+  const a=STATE._assessment||{band:"—",bad:0,warn:0,findings:[],redlines:[]};
+  const row=(k,v)=>`<tr><td style="color:#666;padding:4px 8px">${esc(k)}</td><td style="padding:4px 8px">${esc(v)}</td></tr>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>NDA Triage ${esc(STATE.meta.ref_no)}</title>
+  <style>body{font:13px/1.5 system-ui;margin:24px;color:#111}h1{font-size:18px}h2{font-size:14px;margin-top:18px}table{border-collapse:collapse;width:100%}td{vertical-align:top}.pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd}.bad{background:#fee;color:#900}.warn{background:#ffe;color:#960}.ok{background:#efe;color:#060}</style>
+  </head><body>
+  <h1>NDA Triage — ${esc(STATE.meta.ref_no||"(no ref)")}</h1>
+  <p>Saved: ${esc(STATE.meta.saved_at||"—")}</p>
+  <h2>Parties</h2><table>
+    ${row("Owner",STATE.meta.owner)}${row("Counterparty",STATE.meta.counterparty)}
+    ${row("Kind",STATE.parties.kind)}${row("Role",STATE.parties.role)}${row("Our jurisdiction",STATE.parties.jurisdiction)}
+  </table>
+  <h2>Scope</h2><table>
+    ${row("Purpose",STATE.scope.purpose)}${row("Term (months)",STATE.scope.term_months)}${row("Survival (months)",STATE.scope.survival_months)}
+  </table>
+  <h2>Data</h2><table>
+    ${row("Personal data",STATE.data.personal_data?"Yes":"No")}${row("Special categories",STATE.data.special_categories?"Yes":"No")}
+    ${row("Volume",STATE.data.volume)}${row("Categories",STATE.data.categories)}
+  </table>
+  <h2>Transfers</h2><table>
+    ${row("Cross-border",STATE.transfers.cross_border?"Yes":"No")}${row("Destinations",STATE.transfers.destinations)}${row("Mechanism",STATE.transfers.mechanism)}
+  </table>
+  <h2>Obligations</h2><table>
+    ${row("Sub-processing allowed",STATE.obligations.subprocessing?"Yes":"No")}${row("Audit right",STATE.obligations.audit_right?"Yes":"No")}
+    ${row("Breach notice (h)",STATE.obligations.breach_notice_hours)}${row("Return / delete",STATE.obligations.return_delete?"Yes":"No")}
+    ${row("Retention after term (days)",STATE.obligations.retention_after_term_days)}${row("Governing law",STATE.obligations.governing_law)}${row("Venue",STATE.obligations.venue)}
+  </table>
+  <h2>Assessment</h2>
+  <p>Risk band: <span class="pill ${a.bad>0?'bad':(a.warn>0?'warn':'ok')}">${esc(a.band)}</span> · Red flags: ${a.bad} · Warnings: ${a.warn}</p>
+  <h3>Findings</h3><ul>${a.findings.map(x=>`<li class="${x.level}">${esc(x.msg)}</li>`).join("")||"<li>None.</li>"}</ul>
+  <h3>Recommended redlines</h3><ul>${a.redlines.map(x=>`<li>${esc(x)}</li>`).join("")||"<li>None.</li>"}</ul>
+  <p style="margin-top:24px;color:#888;font-size:11px">Generated by GDPR Toolkit — NDA Triage. Not legal advice.</p>
+  </body></html>`;
+}
+function download(name,data,mime){
+  const blob=new Blob([data],{type:mime||"application/octet-stream"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},500);
+}
+function exportHTML(){
+  assess();
+  const html=buildReportHTML();
+  download(`nda_${(STATE.meta.ref_no||"report").replace(/\W+/g,"_")}.html`,html,"text/html");
+}
+function exportJSON(){
+  assess();
+  const payload={meta:STATE.meta,parties:STATE.parties,scope:STATE.scope,data:STATE.data,transfers:STATE.transfers,obligations:STATE.obligations,notes:STATE.notes,assessment:STATE._assessment};
+  download(`nda_${(STATE.meta.ref_no||"report").replace(/\W+/g,"_")}.json`,JSON.stringify(payload,null,2),"application/json");
+}
+(function boot(){
+  const lang=localStorage.getItem("dpia_lang")||"en";
+  $("lang").value=lang;
+  $("lang").onchange=()=>{localStorage.setItem("dpia_lang",$("lang").value);renderSteps();go(STEP);};
+  $("btnPrev").onclick=()=>{collect();go(STEP-1);};
+  $("btnNext").onclick=()=>{collect();go(STEP+1);};
+  $("btnAssess").onclick=assess;
+  $("btnSave").onclick=saveLocal;
+  $("btnLoad").onclick=loadLocal;
+  $("btnHTML").onclick=exportHTML;
+  $("btnJSON").onclick=exportJSON;
+  $("btnPrint").onclick=()=>window.print();
+  // ?id= hydration
+  const params=new URLSearchParams(location.search);
+  const id=params.get("id");
+  if(id){
+    const reg=registry();
+    if(reg[id]){Object.assign(STATE,reg[id]);}
+  }
+  if(params.get("new")==="1"){STATE.meta.id=null;STATE.meta.saved_at=null;}
+  renderSteps();
+  go(1);
+})();
+</script>
+</body>
+</html>

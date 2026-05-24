@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Contract Review — GDPR Toolkit</title>
+<style>
+:root{--bg:#0b1020;--panel:#121933;--ink:#e8ecf7;--muted:#9aa3c0;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--accent:#6366f1;--line:#26305a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:#0a0f24;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;flex:1}
+header a,header select,header button{color:var(--ink);background:#1a2347;border:1px solid var(--line);border-radius:8px;padding:6px 10px;text-decoration:none;font-size:13px;cursor:pointer}
+header a:hover,header button:hover{border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-12{grid-column:span 12}
+@media (max-width:780px){.col-6,.col-4,.col-3{grid-column:span 12}}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;background:#0e1530;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font:inherit}
+textarea{min-height:80px;resize:vertical}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line)}
+.pill.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
+.pill.warn{background:rgba(245,158,11,.12);color:#fcd34d;border-color:#78350f}
+.pill.bad{background:rgba(239,68,68,.12);color:#fca5a5;border-color:#7f1d1d}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.steps button{background:#0e1530;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:999px;cursor:pointer;font-size:12px}
+.steps button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600}
+.btn.alt{background:#1a2347;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.findings li{margin:6px 0}
+.findings .bad{color:#fca5a5}.findings .warn{color:#fcd34d}.findings .ok{color:#86efac}
+small.hint{color:var(--muted)}
+h2{font-size:15px;margin:0 0 8px 0}
+h3{font-size:13px;margin:14px 0 6px 0;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kv{display:grid;grid-template-columns:200px 1fr;gap:6px 12px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+.checks label{display:flex;align-items:flex-start;gap:8px;color:var(--ink);font-size:13px;margin:6px 0}
+.checks label input{width:auto;margin-top:3px}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Contract Review <small class="hint">· GDPR Toolkit</small></h1>
+  <a href="dashboard.html">← Dashboard</a>
+  <a href="dpia.html">DPIA</a>
+  <a href="dpa.html">DPA</a>
+  <a href="nda.html">NDA</a>
+  <a href="transfer.html">Transfer</a>
+  <select id="lang" aria-label="Language">
+    <option value="en">EN</option><option value="fr">FR</option><option value="de">DE</option><option value="it">IT</option>
+  </select>
+</header>
+<main>
+  <div class="card">
+    <div class="steps" id="steps"></div>
+    <div id="stepBody"></div>
+    <div class="actions">
+      <button class="btn alt" id="btnPrev">← Prev</button>
+      <button class="btn" id="btnNext">Next →</button>
+      <button class="btn alt" id="btnAssess">Assess</button>
+      <button class="btn alt" id="btnSave">Save</button>
+      <button class="btn alt" id="btnLoad">Load</button>
+      <button class="btn alt" id="btnHTML">Export HTML</button>
+      <button class="btn alt" id="btnJSON">Export JSON</button>
+      <button class="btn alt" id="btnPrint">Print</button>
+    </div>
+  </div>
+  <div class="card" id="resultCard" style="display:none">
+    <h2>Contract Review</h2>
+    <div id="resultSummary"></div>
+    <h3>Findings</h3>
+    <ul class="findings" id="findings"></ul>
+    <h3>Recommended Clauses</h3>
+    <ul class="findings" id="redlines"></ul>
+  </div>
+</main>
+<script>
+/* === END PART 1 === */
+const I18N = {
+  en:{steps:["Basics","Commercial","Data","AI / IP","Liability / Exit","Review"]},
+  fr:{steps:["Bases","Commercial","Données","IA / PI","Responsabilité / Sortie","Revue"]},
+  de:{steps:["Basis","Kommerziell","Daten","KI / IP","Haftung / Exit","Prüfung"]},
+  it:{steps:["Base","Commerciale","Dati","IA / PI","Responsabilità / Uscita","Revisione"]}
+};
+let STEP = 1;
+const STATE = {
+  meta:{id:null,type:"contract",ref_no:"",owner:"",counterparty:"",status:"draft",saved_at:null},
+  basics:{kind:"saas",our_role:"customer",jurisdiction:"EU",term_months:24,auto_renew:true,renewal_notice_days:30},
+  commercial:{price_certainty:false,fee_escalator_cap:0,sla_present:false,sla_credits:false,service_credits_cap:0,acceptance_test:false},
+  data:{personal_data:false,special_categories:false,dpa_present:false,dpa_ref:"",controller_role:"controller",cross_border:false,destinations:"",transfer_mechanism:"none"},
+  ai:{ai_used:false,training_on_our_data:false,opt_out_training:false,model_outputs_owned:"shared",confidentiality_of_prompts:false,ai_act_role:"none"},
+  ip:{background_ip_clear:false,foreground_ip_owned:"customer",license_back:false,open_source_disclosed:false},
+  liability:{cap_type:"fees_paid",cap_multiplier:1,carveouts_listed:false,carveouts:"",indemnity_ip:false,indemnity_data:false,insurance_amount:0},
+  exit:{exit_assistance:false,transition_months:0,return_format:"",data_portability:false,deletion_certificate:false},
+  notes:""
+};
+function $(id){return document.getElementById(id)}
+function t(){return I18N[localStorage.getItem("dpia_lang")||"en"]||I18N.en;}
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function cb(id,checked,label){return `<label><input type="checkbox" id="${id}" ${checked?'checked':''}/> ${label}</label>`;}
+function renderSteps(){
+  const s=t().steps;
+  $("steps").innerHTML=s.map((label,i)=>`<button data-step="${i+1}" class="${STEP===i+1?'active':''}">${i+1}. ${esc(label)}</button>`).join("");
+  [...$("steps").querySelectorAll("button")].forEach(b=>b.onclick=()=>go(parseInt(b.dataset.step,10)));
+}
+function go(n){
+  STEP=Math.max(1,Math.min(6,n));
+  renderSteps();
+  const body=$("stepBody");
+  if(STEP===1){
+    body.innerHTML=`<h2>1. Basics</h2><div class="row">
+      <div class="col-4"><label>Reference no.</label><input id="ref_no" value="${esc(STATE.meta.ref_no)}"/></div>
+      <div class="col-4"><label>Owner</label><input id="owner" value="${esc(STATE.meta.owner)}"/></div>
+      <div class="col-4"><label>Counterparty</label><input id="counterparty" value="${esc(STATE.meta.counterparty)}"/></div>
+      <div class="col-4"><label>Contract kind</label><select id="kind">
+        <option value="saas" ${STATE.basics.kind==='saas'?'selected':''}>SaaS</option>
+        <option value="services" ${STATE.basics.kind==='services'?'selected':''}>Professional services</option>
+        <option value="reseller" ${STATE.basics.kind==='reseller'?'selected':''}>Reseller / Channel</option>
+        <option value="license" ${STATE.basics.kind==='license'?'selected':''}>Software license</option>
+        <option value="other" ${STATE.basics.kind==='other'?'selected':''}>Other</option>
+      </select></div>
+      <div class="col-4"><label>Our role</label><select id="our_role">
+        <option value="customer" ${STATE.basics.our_role==='customer'?'selected':''}>Customer</option>
+        <option value="vendor" ${STATE.basics.our_role==='vendor'?'selected':''}>Vendor</option>
+      </select></div>
+      <div class="col-4"><label>Our jurisdiction</label><select id="jurisdiction">
+        <option value="EU" ${STATE.basics.jurisdiction==='EU'?'selected':''}>EU/EEA</option>
+        <option value="UK" ${STATE.basics.jurisdiction==='UK'?'selected':''}>UK</option>
+        <option value="CH" ${STATE.basics.jurisdiction==='CH'?'selected':''}>Switzerland</option>
+        <option value="OTHER" ${STATE.basics.jurisdiction==='OTHER'?'selected':''}>Other</option>
+      </select></div>
+      <div class="col-4"><label>Term (months)</label><input id="term_months" type="number" value="${STATE.basics.term_months}"/></div>
+      <div class="col-4">${cb("auto_renew",STATE.basics.auto_renew,"Auto-renewal")}</div>
+      <div class="col-4"><label>Renewal notice (days)</label><input id="renewal_notice_days" type="number" value="${STATE.basics.renewal_notice_days}"/></div>
+    </div>`;
+  }
+  if(STEP===2){
+    body.innerHTML=`<h2>2. Commercial &amp; SLA</h2><div class="row">
+      <div class="col-6">${cb("price_certainty",STATE.commercial.price_certainty,"Price is fixed / has cap on increases")}</div>
+      <div class="col-6"><label>Fee escalator cap (% per year, 0 if none)</label><input id="fee_escalator_cap" type="number" step="0.1" value="${STATE.commercial.fee_escalator_cap}"/></div>
+      <div class="col-6">${cb("sla_present",STATE.commercial.sla_present,"Written SLA / availability commitment")}</div>
+      <div class="col-6">${cb("sla_credits",STATE.commercial.sla_credits,"SLA includes service credits as remedy")}</div>
+      <div class="col-6"><label>Service credits cap (% of fees, 0 if uncapped)</label><input id="service_credits_cap" type="number" step="0.1" value="${STATE.commercial.service_credits_cap}"/></div>
+      <div class="col-6">${cb("acceptance_test",STATE.commercial.acceptance_test,"Acceptance test / deliverables criteria")}</div>
+    </div>`;
+  }
+  if(STEP===3){
+    body.innerHTML=`<h2>3. Personal data &amp; transfers</h2><div class="row">
+      <div class="col-6">${cb("personal_data",STATE.data.personal_data,"Personal data is processed under the contract")}</div>
+      <div class="col-6">${cb("special_categories",STATE.data.special_categories,"Special categories or criminal data (Art. 9/10)")}</div>
+      <div class="col-6">${cb("dpa_present",STATE.data.dpa_present,"Signed DPA in place (Art. 28)")}</div>
+      <div class="col-6"><label>DPA reference</label><input id="dpa_ref" value="${esc(STATE.data.dpa_ref)}" placeholder="link to dpa.html record ID"/></div>
+      <div class="col-6"><label>Counterparty data role</label><select id="controller_role">
+        <option value="controller" ${STATE.data.controller_role==='controller'?'selected':''}>Controller</option>
+        <option value="processor" ${STATE.data.controller_role==='processor'?'selected':''}>Processor</option>
+        <option value="joint" ${STATE.data.controller_role==='joint'?'selected':''}>Joint controller</option>
+        <option value="independent" ${STATE.data.controller_role==='independent'?'selected':''}>Independent controller</option>
+      </select></div>
+      <div class="col-6">${cb("cross_border",STATE.data.cross_border,"Data leaves EU/EEA/UK/CH")}</div>
+      <div class="col-6"><label>Destinations</label><input id="destinations" value="${esc(STATE.data.destinations)}"/></div>
+      <div class="col-6"><label>Transfer mechanism</label><select id="transfer_mechanism">
+        <option value="none" ${STATE.data.transfer_mechanism==='none'?'selected':''}>None / not addressed</option>
+        <option value="adequacy" ${STATE.data.transfer_mechanism==='adequacy'?'selected':''}>Adequacy</option>
+        <option value="sccs" ${STATE.data.transfer_mechanism==='sccs'?'selected':''}>SCCs (2021/914)</option>
+        <option value="bcr" ${STATE.data.transfer_mechanism==='bcr'?'selected':''}>BCRs</option>
+        <option value="dpf" ${STATE.data.transfer_mechanism==='dpf'?'selected':''}>DPF</option>
+        <option value="derogation" ${STATE.data.transfer_mechanism==='derogation'?'selected':''}>Art. 49 derogation</option>
+      </select></div>
+    </div>`;
+  }
+  if(STEP===4){
+    body.innerHTML=`<h2>4. AI &amp; Intellectual Property</h2><div class="row">
+      <div class="col-6">${cb("ai_used",STATE.ai.ai_used,"Service uses AI / ML")}</div>
+      <div class="col-6">${cb("training_on_our_data",STATE.ai.training_on_our_data,"Counterparty trains models on our data")}</div>
+      <div class="col-6">${cb("opt_out_training",STATE.ai.opt_out_training,"Opt-out / no-training commitment in writing")}</div>
+      <div class="col-6"><label>Model outputs owned by</label><select id="model_outputs_owned">
+        <option value="customer" ${STATE.ai.model_outputs_owned==='customer'?'selected':''}>Customer</option>
+        <option value="vendor" ${STATE.ai.model_outputs_owned==='vendor'?'selected':''}>Vendor</option>
+        <option value="shared" ${STATE.ai.model_outputs_owned==='shared'?'selected':''}>Shared / unclear</option>
+      </select></div>
+      <div class="col-6">${cb("confidentiality_of_prompts",STATE.ai.confidentiality_of_prompts,"Prompts &amp; inputs treated as confidential")}</div>
+      <div class="col-6"><label>EU AI Act role</label><select id="ai_act_role">
+        <option value="none" ${STATE.ai.ai_act_role==='none'?'selected':''}>Out of scope / unclear</option>
+        <option value="provider" ${STATE.ai.ai_act_role==='provider'?'selected':''}>Provider</option>
+        <option value="deployer" ${STATE.ai.ai_act_role==='deployer'?'selected':''}>Deployer</option>
+        <option value="distributor" ${STATE.ai.ai_act_role==='distributor'?'selected':''}>Distributor / importer</option>
+      </select></div>
+      <div class="col-6">${cb("background_ip_clear",STATE.ip.background_ip_clear,"Background IP ownership is clear")}</div>
+      <div class="col-6"><label>Foreground IP owned by</label><select id="foreground_ip_owned">
+        <option value="customer" ${STATE.ip.foreground_ip_owned==='customer'?'selected':''}>Customer</option>
+        <option value="vendor" ${STATE.ip.foreground_ip_owned==='vendor'?'selected':''}>Vendor</option>
+        <option value="joint" ${STATE.ip.foreground_ip_owned==='joint'?'selected':''}>Joint</option>
+      </select></div>
+      <div class="col-6">${cb("license_back",STATE.ip.license_back,"License-back to other party covers necessary use")}</div>
+      <div class="col-6">${cb("open_source_disclosed",STATE.ip.open_source_disclosed,"Open source components disclosed")}</div>
+    </div>`;
+  }
+  if(STEP===5){
+    body.innerHTML=`<h2>5. Liability, indemnity &amp; exit</h2><div class="row">
+      <div class="col-6"><label>Liability cap type</label><select id="cap_type">
+        <option value="fees_paid" ${STATE.liability.cap_type==='fees_paid'?'selected':''}>Fees paid (12 months)</option>
+        <option value="fees_payable" ${STATE.liability.cap_type==='fees_payable'?'selected':''}>Fees payable</option>
+        <option value="fixed" ${STATE.liability.cap_type==='fixed'?'selected':''}>Fixed amount</option>
+        <option value="uncapped" ${STATE.liability.cap_type==='uncapped'?'selected':''}>Uncapped / silent</option>
+      </select></div>
+      <div class="col-6"><label>Cap multiplier (×fees)</label><input id="cap_multiplier" type="number" step="0.5" value="${STATE.liability.cap_multiplier}"/></div>
+      <div class="col-6">${cb("carveouts_listed",STATE.liability.carveouts_listed,"Carve-outs from cap listed (data breach, IP, confidentiality)")}</div>
+      <div class="col-6"><label>Carve-outs (free text)</label><input id="carveouts" value="${esc(STATE.liability.carveouts)}"/></div>
+      <div class="col-6">${cb("indemnity_ip",STATE.liability.indemnity_ip,"IP indemnity (third-party claims)")}</div>
+      <div class="col-6">${cb("indemnity_data",STATE.liability.indemnity_data,"Data / privacy indemnity")}</div>
+      <div class="col-6"><label>Insurance amount (€)</label><input id="insurance_amount" type="number" value="${STATE.liability.insurance_amount}"/></div>
+      <div class="col-6">${cb("exit_assistance",STATE.exit.exit_assistance,"Exit / transition assistance committed")}</div>
+      <div class="col-3"><label>Transition (months)</label><input id="transition_months" type="number" value="${STATE.exit.transition_months}"/></div>
+      <div class="col-3"><label>Return format</label><input id="return_format" value="${esc(STATE.exit.return_format)}" placeholder="CSV, SQL dump…"/></div>
+      <div class="col-6">${cb("data_portability",STATE.exit.data_portability,"Data portability guaranteed in a structured machine-readable format")}</div>
+      <div class="col-6">${cb("deletion_certificate",STATE.exit.deletion_certificate,"Deletion certificate on termination")}</div>
+      <div class="col-12"><label>Notes</label><textarea id="notes">${esc(STATE.notes)}</textarea></div>
+    </div>`;
+  }
+  if(STEP===6){
+    body.innerHTML=`<h2>6. Review &amp; Assess</h2>
+      <p>Click <b>Assess</b> for a clause-by-clause review.</p>
+      <div class="kv">
+        <div>Ref</div><div>${esc(STATE.meta.ref_no)||"—"}</div>
+        <div>Counterparty</div><div>${esc(STATE.meta.counterparty)||"—"}</div>
+        <div>Kind</div><div>${esc(STATE.basics.kind)} · our role: ${esc(STATE.basics.our_role)}</div>
+        <div>Personal data?</div><div>${STATE.data.personal_data?"Yes":"No"} ${STATE.data.dpa_present?"(DPA in place)":""}</div>
+        <div>AI involved?</div><div>${STATE.ai.ai_used?"Yes":"No"}</div>
+        <div>Liability cap</div><div>${esc(STATE.liability.cap_type)} ×${STATE.liability.cap_multiplier}</div>
+      </div>`;
+  }
+}
+function collect(){
+  const v=id=>{const el=$(id);if(!el)return undefined;return el.type==='checkbox'?el.checked:el.value;};
+  if(STEP===1){
+    STATE.meta.ref_no=v("ref_no")??STATE.meta.ref_no;
+    STATE.meta.owner=v("owner")??STATE.meta.owner;
+    STATE.meta.counterparty=v("counterparty")??STATE.meta.counterparty;
+    STATE.basics.kind=v("kind")??STATE.basics.kind;
+    STATE.basics.our_role=v("our_role")??STATE.basics.our_role;
+    STATE.basics.jurisdiction=v("jurisdiction")??STATE.basics.jurisdiction;
+    STATE.basics.term_months=parseInt(v("term_months")||"0",10);
+    STATE.basics.auto_renew=!!v("auto_renew");
+    STATE.basics.renewal_notice_days=parseInt(v("renewal_notice_days")||"0",10);
+  }
+  if(STEP===2){
+    STATE.commercial.price_certainty=!!v("price_certainty");
+    STATE.commercial.fee_escalator_cap=parseFloat(v("fee_escalator_cap")||"0");
+    STATE.commercial.sla_present=!!v("sla_present");
+    STATE.commercial.sla_credits=!!v("sla_credits");
+    STATE.commercial.service_credits_cap=parseFloat(v("service_credits_cap")||"0");
+    STATE.commercial.acceptance_test=!!v("acceptance_test");
+  }
+  if(STEP===3){
+    STATE.data.personal_data=!!v("personal_data");
+    STATE.data.special_categories=!!v("special_categories");
+    STATE.data.dpa_present=!!v("dpa_present");
+    STATE.data.dpa_ref=v("dpa_ref")??STATE.data.dpa_ref;
+    STATE.data.controller_role=v("controller_role")??STATE.data.controller_role;
+    STATE.data.cross_border=!!v("cross_border");
+    STATE.data.destinations=v("destinations")??STATE.data.destinations;
+    STATE.data.transfer_mechanism=v("transfer_mechanism")??STATE.data.transfer_mechanism;
+  }
+  if(STEP===4){
+    STATE.ai.ai_used=!!v("ai_used");
+    STATE.ai.training_on_our_data=!!v("training_on_our_data");
+    STATE.ai.opt_out_training=!!v("opt_out_training");
+    STATE.ai.model_outputs_owned=v("model_outputs_owned")??STATE.ai.model_outputs_owned;
+    STATE.ai.confidentiality_of_prompts=!!v("confidentiality_of_prompts");
+    STATE.ai.ai_act_role=v("ai_act_role")??STATE.ai.ai_act_role;
+    STATE.ip.background_ip_clear=!!v("background_ip_clear");
+    STATE.ip.foreground_ip_owned=v("foreground_ip_owned")??STATE.ip.foreground_ip_owned;
+    STATE.ip.license_back=!!v("license_back");
+    STATE.ip.open_source_disclosed=!!v("open_source_disclosed");
+  }
+  if(STEP===5){
+    STATE.liability.cap_type=v("cap_type")??STATE.liability.cap_type;
+    STATE.liability.cap_multiplier=parseFloat(v("cap_multiplier")||"0");
+    STATE.liability.carveouts_listed=!!v("carveouts_listed");
+    STATE.liability.carveouts=v("carveouts")??STATE.liability.carveouts;
+    STATE.liability.indemnity_ip=!!v("indemnity_ip");
+    STATE.liability.indemnity_data=!!v("indemnity_data");
+    STATE.liability.insurance_amount=parseFloat(v("insurance_amount")||"0");
+    STATE.exit.exit_assistance=!!v("exit_assistance");
+    STATE.exit.transition_months=parseInt(v("transition_months")||"0",10);
+    STATE.exit.return_format=v("return_format")??STATE.exit.return_format;
+    STATE.exit.data_portability=!!v("data_portability");
+    STATE.exit.deletion_certificate=!!v("deletion_certificate");
+    STATE.notes=v("notes")??STATE.notes;
+  }
+}
+function assess(){
+  collect();
+  const f=[],r=[];
+  // Basics
+  if(STATE.basics.auto_renew && STATE.basics.renewal_notice_days>60){f.push({level:"warn",msg:`Auto-renewal with ${STATE.basics.renewal_notice_days}-day notice is long.`});r.push("Tighten non-renewal window to 30 days.");}
+  // Commercial
+  if(!STATE.commercial.price_certainty){f.push({level:"warn",msg:"No fee cap / price certainty."});r.push("Add cap on annual increases (e.g., CPI or 5%).");}
+  if(STATE.basics.kind==="saas" && !STATE.commercial.sla_present){f.push({level:"bad",msg:"SaaS contract without an SLA."});r.push("Add availability SLA (e.g., 99.9% monthly) with service credits.");}
+  if(STATE.commercial.sla_present && !STATE.commercial.sla_credits){f.push({level:"warn",msg:"SLA without service credit remedy."});r.push("Add tiered service credits with chronic-failure termination right.");}
+  // Data
+  if(STATE.data.personal_data && !STATE.data.dpa_present){f.push({level:"bad",msg:"Personal data processed but no Art. 28 DPA referenced."});r.push("Execute Art. 28 DPA before go-live; link via dpa.html record.");}
+  if(STATE.data.personal_data && STATE.data.cross_border && STATE.data.transfer_mechanism==="none"){f.push({level:"bad",msg:"Cross-border data flow without Chapter V mechanism."});r.push("Adopt SCCs / DPF / adequacy and complete a TIA.");}
+  if(STATE.data.special_categories && STATE.data.controller_role==="independent"){f.push({level:"warn",msg:"Special-category data with independent-controller relationship — Art. 26 may apply."});r.push("Clarify whether arrangement is joint controllership and add Art. 26 transparency.");}
+  // AI
+  if(STATE.ai.ai_used && STATE.ai.training_on_our_data && !STATE.ai.opt_out_training){f.push({level:"bad",msg:"Vendor trains on our data with no opt-out commitment."});r.push("Add 'no training on Customer Data without prior written consent' and IP/Privacy carve-outs.");}
+  if(STATE.ai.ai_used && STATE.ai.model_outputs_owned==="shared"){f.push({level:"warn",msg:"Ownership of AI outputs unclear."});r.push("Allocate outputs to Customer with non-exclusive license-back for service operation.");}
+  if(STATE.ai.ai_used && !STATE.ai.confidentiality_of_prompts){f.push({level:"warn",msg:"Prompts / inputs not declared confidential."});r.push("State prompts and outputs are Customer Confidential Information.");}
+  if(STATE.ai.ai_used && STATE.ai.ai_act_role==="none"){f.push({level:"warn",msg:"EU AI Act roles not allocated."});r.push("Allocate provider/deployer/distributor roles and obligations (e.g., human oversight, logging, risk class).");}
+  // IP
+  if(!STATE.ip.background_ip_clear){f.push({level:"warn",msg:"Background IP ownership not clearly stated."});r.push("Recite each party retains its background IP.");}
+  if(!STATE.ip.license_back){f.push({level:"warn",msg:"No license-back to enable other party's necessary use."});r.push("Grant non-exclusive license-back limited to the service / project.");}
+  if(!STATE.ip.open_source_disclosed && STATE.basics.kind!=="services"){f.push({level:"warn",msg:"Open source components not disclosed."});r.push("Require OSS disclosure and compliance with applicable licenses.");}
+  // Liability
+  if(STATE.liability.cap_type==="uncapped"){f.push({level:"bad",msg:"Liability cap missing or uncapped."});r.push("Cap general liability at fees paid in prior 12 months; super-cap (e.g., 2×) for data/privacy claims.");}
+  if(STATE.liability.cap_type==="fees_paid" && STATE.liability.cap_multiplier<1){f.push({level:"warn",msg:"Liability cap < 1× annual fees."});r.push("Negotiate at least 1× annual fees; 2× for data-breach claims.");}
+  if(!STATE.liability.carveouts_listed){f.push({level:"warn",msg:"No carve-outs from cap stated."});r.push("Carve out: data breach, IP infringement, breach of confidentiality, gross negligence / willful misconduct, indemnity obligations.");}
+  if(STATE.data.personal_data && !STATE.liability.indemnity_data){f.push({level:"bad",msg:"Personal data without data/privacy indemnity."});r.push("Add data-protection indemnity with super-cap and direct claim by data subjects covered.");}
+  if(!STATE.liability.indemnity_ip){f.push({level:"warn",msg:"No IP indemnity from supplier."});r.push("Add IP indemnity with defense + injunctive remedies.");}
+  if(STATE.liability.insurance_amount<1000000){f.push({level:"warn",msg:"Insurance coverage below €1M."});r.push("Require €5M+ professional + €5M+ cyber for data-heavy services.");}
+  // Exit
+  if(!STATE.exit.exit_assistance){f.push({level:"warn",msg:"No exit / transition assistance committed."});r.push("Add transition services for at least 3 months at then-current rates.");}
+  if(STATE.data.personal_data && !STATE.exit.deletion_certificate){f.push({level:"bad",msg:"No deletion certificate on termination for personal data."});r.push("Require certificate of destruction within 30 days post-termination.");}
+  if(STATE.basics.kind==="saas" && !STATE.exit.data_portability){f.push({level:"warn",msg:"SaaS without data portability obligation."});r.push("Provide structured, machine-readable export on request and at termination.");}
+
+  const bad=f.filter(x=>x.level==="bad").length;
+  const warn=f.filter(x=>x.level==="warn").length;
+  const band=bad>=3?"High":(bad>0?"Medium-High":(warn>=4?"Medium":(warn>0?"Low-Medium":"Low")));
+  $("resultCard").style.display="block";
+  $("resultSummary").innerHTML=`<div class="kv">
+    <div>Risk band</div><div><span class="pill ${bad>0?'bad':(warn>0?'warn':'ok')}">${band}</span></div>
+    <div>Red flags</div><div>${bad}</div>
+    <div>Warnings</div><div>${warn}</div></div>`;
+  $("findings").innerHTML=f.length?f.map(x=>`<li class="${x.level}">${esc(x.msg)}</li>`).join(""):"<li class='ok'>No issues detected.</li>";
+  $("redlines").innerHTML=r.length?r.map(x=>`<li>${esc(x)}</li>`).join(""):"<li>None.</li>";
+  STATE._assessment={band,bad,warn,findings:f,redlines:r,at:new Date().toISOString()};
+}
+/* === END PART 2 === */
+function registry(){
+  try{return JSON.parse(localStorage.getItem("contract_registry_v1")||"{}");}catch(e){return {};}
+}
+function writeRegistry(reg){localStorage.setItem("contract_registry_v1",JSON.stringify(reg));}
+function saveLocal(){
+  collect();
+  if(!STATE.meta.id) STATE.meta.id="ct_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,6);
+  STATE.meta.saved_at=new Date().toISOString();
+  const reg=registry();
+  reg[STATE.meta.id]=STATE;
+  writeRegistry(reg);
+  alert("Saved. ID: "+STATE.meta.id);
+}
+function loadLocal(){
+  const id=prompt("Enter Contract ID to load:");
+  if(!id) return;
+  const reg=registry();
+  if(!reg[id]){alert("Not found.");return;}
+  Object.assign(STATE,reg[id]);
+  go(1);
+}
+function buildReportHTML(){
+  const a=STATE._assessment||{band:"—",bad:0,warn:0,findings:[],redlines:[]};
+  const row=(k,v)=>`<tr><td style="color:#666;padding:4px 8px">${esc(k)}</td><td style="padding:4px 8px">${esc(v)}</td></tr>`;
+  const chk=(k,v)=>`<tr><td style="color:#666;padding:4px 8px">${esc(k)}</td><td style="padding:4px 8px">${v?"✓":"✗"}</td></tr>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Contract Review ${esc(STATE.meta.ref_no)}</title>
+  <style>body{font:13px/1.5 system-ui;margin:24px;color:#111}h1{font-size:18px}h2{font-size:14px;margin-top:18px}table{border-collapse:collapse;width:100%}td{vertical-align:top;border-bottom:1px solid #eee}.pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd}.bad{background:#fee;color:#900}.warn{background:#ffe;color:#960}.ok{background:#efe;color:#060}</style>
+  </head><body>
+  <h1>Contract Review — ${esc(STATE.meta.ref_no||"(no ref)")}</h1>
+  <p>Saved: ${esc(STATE.meta.saved_at||"—")} · Owner: ${esc(STATE.meta.owner)} · Counterparty: ${esc(STATE.meta.counterparty)}</p>
+  <h2>Basics</h2><table>
+    ${row("Kind",STATE.basics.kind)}${row("Our role",STATE.basics.our_role)}${row("Jurisdiction",STATE.basics.jurisdiction)}
+    ${row("Term (months)",STATE.basics.term_months)}${chk("Auto-renewal",STATE.basics.auto_renew)}${row("Renewal notice (days)",STATE.basics.renewal_notice_days)}
+  </table>
+  <h2>Commercial</h2><table>
+    ${chk("Price certainty",STATE.commercial.price_certainty)}${row("Fee escalator cap (%)",STATE.commercial.fee_escalator_cap)}
+    ${chk("SLA present",STATE.commercial.sla_present)}${chk("SLA service credits",STATE.commercial.sla_credits)}
+    ${row("Service credits cap (%)",STATE.commercial.service_credits_cap)}${chk("Acceptance test",STATE.commercial.acceptance_test)}
+  </table>
+  <h2>Data</h2><table>
+    ${chk("Personal data",STATE.data.personal_data)}${chk("Special categories",STATE.data.special_categories)}
+    ${chk("DPA in place",STATE.data.dpa_present)}${row("DPA reference",STATE.data.dpa_ref)}
+    ${row("Counterparty data role",STATE.data.controller_role)}${chk("Cross-border",STATE.data.cross_border)}
+    ${row("Destinations",STATE.data.destinations)}${row("Transfer mechanism",STATE.data.transfer_mechanism)}
+  </table>
+  <h2>AI &amp; IP</h2><table>
+    ${chk("AI used",STATE.ai.ai_used)}${chk("Trains on our data",STATE.ai.training_on_our_data)}${chk("Opt-out training",STATE.ai.opt_out_training)}
+    ${row("Outputs owned by",STATE.ai.model_outputs_owned)}${chk("Prompt confidentiality",STATE.ai.confidentiality_of_prompts)}${row("AI Act role",STATE.ai.ai_act_role)}
+    ${chk("Background IP clear",STATE.ip.background_ip_clear)}${row("Foreground IP owner",STATE.ip.foreground_ip_owned)}${chk("License-back",STATE.ip.license_back)}${chk("Open source disclosed",STATE.ip.open_source_disclosed)}
+  </table>
+  <h2>Liability &amp; Exit</h2><table>
+    ${row("Cap type",STATE.liability.cap_type)}${row("Cap multiplier",STATE.liability.cap_multiplier)}
+    ${chk("Carve-outs listed",STATE.liability.carveouts_listed)}${row("Carve-outs",STATE.liability.carveouts)}
+    ${chk("IP indemnity",STATE.liability.indemnity_ip)}${chk("Data indemnity",STATE.liability.indemnity_data)}
+    ${row("Insurance (€)",STATE.liability.insurance_amount)}
+    ${chk("Exit assistance",STATE.exit.exit_assistance)}${row("Transition (months)",STATE.exit.transition_months)}
+    ${row("Return format",STATE.exit.return_format)}${chk("Data portability",STATE.exit.data_portability)}${chk("Deletion certificate",STATE.exit.deletion_certificate)}
+  </table>
+  <h2>Assessment</h2>
+  <p>Risk band: <span class="pill ${a.bad>0?'bad':(a.warn>0?'warn':'ok')}">${esc(a.band)}</span> · Red flags: ${a.bad} · Warnings: ${a.warn}</p>
+  <h3>Findings</h3><ul>${a.findings.map(x=>`<li class="${x.level}">${esc(x.msg)}</li>`).join("")||"<li>None.</li>"}</ul>
+  <h3>Recommended clauses</h3><ul>${a.redlines.map(x=>`<li>${esc(x)}</li>`).join("")||"<li>None.</li>"}</ul>
+  <p style="margin-top:24px;color:#888;font-size:11px">Generated by GDPR Toolkit — Contract Review. Not legal advice.</p>
+  </body></html>`;
+}
+function download(name,data,mime){
+  const blob=new Blob([data],{type:mime||"application/octet-stream"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},500);
+}
+function exportHTML(){
+  assess();
+  const html=buildReportHTML();
+  download(`contract_${(STATE.meta.ref_no||"report").replace(/\W+/g,"_")}.html`,html,"text/html");
+}
+function exportJSON(){
+  assess();
+  const payload={meta:STATE.meta,basics:STATE.basics,commercial:STATE.commercial,data:STATE.data,ai:STATE.ai,ip:STATE.ip,liability:STATE.liability,exit:STATE.exit,notes:STATE.notes,assessment:STATE._assessment};
+  download(`contract_${(STATE.meta.ref_no||"report").replace(/\W+/g,"_")}.json`,JSON.stringify(payload,null,2),"application/json");
+}
+(function boot(){
+  const lang=localStorage.getItem("dpia_lang")||"en";
+  $("lang").value=lang;
+  $("lang").onchange=()=>{localStorage.setItem("dpia_lang",$("lang").value);renderSteps();go(STEP);};
+  $("btnPrev").onclick=()=>{collect();go(STEP-1);};
+  $("btnNext").onclick=()=>{collect();go(STEP+1);};
+  $("btnAssess").onclick=assess;
+  $("btnSave").onclick=saveLocal;
+  $("btnLoad").onclick=loadLocal;
+  $("btnHTML").onclick=exportHTML;
+  $("btnJSON").onclick=exportJSON;
+  $("btnPrint").onclick=()=>window.print();
+  const params=new URLSearchParams(location.search);
+  const id=params.get("id");
+  if(id){
+    const reg=registry();
+    if(reg[id]){Object.assign(STATE,reg[id]);}
+  }
+  if(params.get("new")==="1"){STATE.meta.id=null;STATE.meta.saved_at=null;}
+  renderSteps();
+  go(1);
+})();
+</script>
+</body>
+</html>

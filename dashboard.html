@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compliance Hub — Dashboard</title>
+<style>
+  :root{--ink:#111;--mut:#666;--ln:#e5e7eb;--bg:#fafafa;--ok:#0a7a3b;--lo:#0a7a3b;--md:#b15c00;--hi:#b00020;--cr:#7a0010}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:#fff;border-bottom:1px solid var(--ln);padding:10px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+  header h1{font-size:16px;margin:0 8px 0 0}
+  .sp{flex:1}
+  header button, header select, header a.btn{font-size:12px;padding:6px 10px;border:1px solid var(--ln);background:#fff;border-radius:6px;cursor:pointer;text-decoration:none;color:var(--ink)}
+  header button:hover, header a.btn:hover{background:#f3f4f6}
+  .notice{background:#fff8e1;border-bottom:1px solid #f0e0a0;padding:6px 16px;font-size:12px;color:#6b5b00}
+  main{max-width:1280px;margin:16px auto;padding:0 16px}
+
+  .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
+  @media(max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}}
+  .kpi{background:#fff;border:1px solid var(--ln);border-radius:10px;padding:10px 12px}
+  .kpi h3{font-size:11px;color:var(--mut);margin:0;text-transform:uppercase;letter-spacing:.04em}
+  .kpi .n{font:600 22px/1.1 -apple-system,Segoe UI,Roboto,sans-serif;margin-top:2px}
+  .kpi small{color:var(--mut);font-size:11px}
+
+  .tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--ln);margin-bottom:10px}
+  .tabs button{background:transparent;border:none;border-bottom:2px solid transparent;padding:8px 12px;font:inherit;color:var(--mut);cursor:pointer}
+  .tabs button.active{color:var(--ink);border-bottom-color:#111;font-weight:600}
+  .tabs .count{display:inline-block;background:#eef2f7;color:#374151;font-size:11px;border-radius:999px;padding:0 7px;margin-left:6px}
+
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .toolbar input[type=search],.toolbar select{border:1px solid var(--ln);border-radius:6px;padding:6px 8px;font:inherit;background:#fff}
+  .toolbar input[type=search]{min-width:240px}
+  .toolbar .right{margin-left:auto;display:flex;gap:6px}
+
+  .card{background:#fff;border:1px solid var(--ln);border-radius:10px;padding:10px;overflow:auto}
+  table{width:100%;border-collapse:collapse}
+  th,td{border-bottom:1px solid var(--ln);padding:8px 8px;text-align:left;font-size:13px;vertical-align:top}
+  th{background:#f8fafc;font-weight:600;position:sticky;top:0;cursor:pointer;user-select:none}
+  tr:hover td{background:#fcfcfd}
+  .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;color:#fff}
+  .p-lo{background:var(--lo)} .p-md{background:var(--md)} .p-hi{background:var(--hi)} .p-cr{background:var(--cr)} .p-in{background:#374151}
+  .badge{display:inline-block;padding:1px 6px;border-radius:6px;background:#eef2f7;font-size:11px;color:#374151;margin-right:4px}
+  .row-actions a{margin-right:8px;font-size:12px}
+  .empty{padding:18px;text-align:center;color:var(--mut)}
+  .small{font-size:11px;color:var(--mut)}
+  #flash{position:fixed;bottom:16px;right:16px;background:#111;color:#fff;padding:8px 12px;border-radius:6px;display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>🛡️ Compliance Hub</h1>
+  <select id="lang" title="Language">
+    <option value="en">EN</option><option value="fr">FR</option><option value="de">DE</option><option value="it">IT</option>
+  </select>
+  <span class="sp"></span>
+  <button id="btnRefresh">🔄 Refresh</button>
+  <button id="btnExport">⬇ Export all</button>
+  <button id="btnImport">⬆ Import bundle</button>
+  <input id="fileImport" type="file" accept="application/json" style="display:none">
+  <button id="btnClear">🗑 Clear all</button>
+</header>
+<div class="notice">All data is read from this browser's localStorage. Nothing is sent to a server. Open each tool in its own page to edit a record.</div>
+
+<main>
+  <section class="kpis" id="kpis"></section>
+  <nav class="tabs" id="tabs"></nav>
+
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Search ref, party, owner, country…">
+    <select id="fStatus"><option value="">All statuses</option></select>
+    <select id="fOwner"><option value="">All owners</option></select>
+    <select id="fSeverity"><option value="">All severities/verdicts</option>
+      <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+      <option>Use SCCs + TIA + supplementary measures</option>
+      <option>Permitted under Art. 45 (adequacy)</option>
+      <option>Permitted under Art. 47 (BCRs)</option>
+    </select>
+    <div class="right">
+      <a class="btn" href="dpia.html?new=1">+ DPIA</a>
+      <a class="btn" href="breach.html?new=1">+ Breach</a>
+      <a class="btn" href="nda.html?new=1">+ NDA</a>
+      <a class="btn" href="dpa.html?new=1">+ DPA</a>
+      <a class="btn" href="contract.html?new=1">+ Contract</a>
+      <a class="btn" href="transfer.html?new=1">+ Transfer</a>
+    </div>
+  </div>
+
+  <section class="card">
+    <table id="tbl">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" class="empty" style="display:none">No records match the current filters.</div>
+  </section>
+
+  <p class="small" style="margin-top:10px">Tip: bookmark <code>?tab=contracts</code>, <code>?tab=transfers</code> etc. to deep-link.</p>
+</main>
+
+<script>
+const TOOLS = [
+  {
+    key:"dpia", label:"DPIAs", store:"dpia_registry_v1", href:"dpia.html",
+    cols:[
+      {h:"Ref",      r:m=>m.ref_no},
+      {h:"Project",  r:m=>m.project||m.title||""},
+      {h:"Owner",    r:m=>m.owner||""},
+      {h:"Residual", r:m=>pill(m.residual||m.risk||"")},
+      {h:"Status",   r:m=>m.status||""},
+      {h:"Updated",  r:m=>fmtDate(m.saved_at)}
+    ],
+    severity: m => m.residual || m.risk || ""
+  },
+  {
+    key:"breach", label:"Breaches", store:"breach_registry_v1", href:"breach.html",
+    cols:[
+      {h:"Ref",        r:m=>m.ref_no},
+      {h:"Severity",   r:m=>pill(m.severity||"")},
+      {h:"Art. 33",    r:m=>m.art33_status||""},
+      {h:"Owner",      r:m=>m.owner||""},
+      {h:"Updated",    r:m=>fmtDate(m.saved_at)}
+    ],
+    severity: m => m.severity || ""
+  },
+  {
+    key:"nda", label:"NDAs", store:"nda_registry_v1", href:"nda.html",
+    cols:[
+      {h:"Ref",         r:m=>m.ref_no},
+      {h:"Counterparty",r:m=>m.counterparty||""},
+      {h:"Direction",   r:m=>m.direction||""},
+      {h:"Owner",       r:m=>m.owner||""},
+      {h:"Status",      r:m=>m.status||""},
+      {h:"Updated",     r:m=>fmtDate(m.saved_at)}
+    ],
+    severity: m => m.risk || ""
+  },
+  {
+    key:"dpa", label:"DPAs", store:"dpa_registry_v1", href:"dpa.html",
+    cols:[
+      {h:"Ref",        r:m=>m.ref_no},
+      {h:"Controller", r:m=>m.controller||""},
+      {h:"Processor",  r:m=>m.processor||""},
+      {h:"Intl",       r:m=>m.intl||"No"},
+      {h:"SCC mod.",   r:m=>m.scc_module||""},
+      {h:"Status",     r:m=>m.status||""},
+      {h:"Updated",    r:m=>fmtDate(m.saved_at)}
+    ],
+    severity: ()=> ""
+  },
+  {
+    key:"contract", label:"Contracts", store:"contract_registry_v1", href:"contract.html",
+    cols:[
+      {h:"Ref",         r:m=>m.ref_no},
+      {h:"Counterparty",r:m=>m.counterparty||""},
+      {h:"Type",        r:m=>m.ctype||""},
+      {h:"Overall",     r:m=>pill(m.overall||"")},
+      {h:"C/H",         r:m=>`<span class="badge">C ${m.critical||0}</span><span class="badge">H ${m.high||0}</span>`},
+      {h:"Owner",       r:m=>m.owner||""},
+      {h:"Status",      r:m=>m.status||""},
+      {h:"Updated",     r:m=>fmtDate(m.saved_at)}
+    ],
+    severity: m => m.overall || ""
+  },
+  {
+    key:"transfer", label:"Transfers", store:"transfer_registry_v1", href:"transfer.html",
+    cols:[
+      {h:"Ref",        r:m=>m.ref_no},
+      {h:"Exporter",   r:m=>m.exporter||""},
+      {h:"Importer",   r:m=>m.importer||""},
+      {h:"Country",    r:m=>m.country_name||m.country||""},
+      {h:"Verdict",    r:m=>pillVerdict(m.verdict, m.verdict_class)},
+      {h:"Owner",      r:m=>m.owner||""},
+      {h:"Status",     r:m=>m.status||""},
+      {h:"Updated",    r:m=>fmtDate(m.saved_at)}
+    ],
+    severity: m => m.verdict || ""
+  }
+];
+
+function readReg(key){
+  try { return JSON.parse(localStorage.getItem(key) || "{}"); }
+  catch(e){ return {}; }
+}
+function allRecords(){
+  const out = [];
+  TOOLS.forEach(t=>{
+    const r = readReg(t.store);
+    Object.values(r).forEach(m => out.push({tool:t, meta:m}));
+  });
+  return out;
+}
+function fmtDate(s){
+  if(!s) return "";
+  const d = new Date(s); if(isNaN(d)) return s;
+  return d.toISOString().slice(0,16).replace("T"," ");
+}
+function pill(v){
+  const map = {"Critical":"cr","High":"hi","Medium":"md","Low":"lo","Info":"in"};
+  const cls = map[v] || "in";
+  return v ? `<span class="pill p-${cls}">${esc(v)}</span>` : "";
+}
+function pillVerdict(label, cls){
+  if(!label) return "";
+  const c = cls || "in";
+  return `<span class="pill p-${c}">${esc(label)}</span>`;
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function flash(msg){
+  const n = document.getElementById("flash") || (()=>{const x=document.createElement("div");x.id="flash";x.style.cssText="position:fixed;bottom:16px;right:16px;background:#111;color:#fff;padding:8px 12px;border-radius:6px;z-index:9999;opacity:.95";document.body.appendChild(x);return x;})();
+  n.textContent=msg;n.style.display="block";clearTimeout(window.__ft);window.__ft=setTimeout(()=>n.style.display="none",1600);
+}
+
+const state = {
+  tab: new URLSearchParams(location.search).get("tab") || "all",
+  q: "", status: "", owner: "", sev: "",
+  sortKey: "saved_at", sortDir: -1
+};
+
+function renderKPIs(records){
+  const total = records.length;
+  const byTool = {};
+  TOOLS.forEach(t=> byTool[t.key] = 0);
+  records.forEach(r=> byTool[r.tool.key] = (byTool[r.tool.key]||0)+1);
+  const criticals = records.filter(r=>{
+    const s = (r.tool.severity ? r.tool.severity(r.meta) : "") || "";
+    return /critical/i.test(s);
+  }).length;
+  const overdue = records.filter(r=>{
+    if(!r.meta.saved_at) return false;
+    const d = new Date(r.meta.saved_at);
+    const days = (Date.now()-d.getTime())/86400000;
+    return days > 365 && (r.meta.status !== "Closed" && r.meta.status !== "Rejected");
+  }).length;
+
+  const tiles = [
+    {h:"Total records", n:total, s:`across ${TOOLS.length} tools`},
+    {h:"DPIAs",   n:byTool.dpia,   s:"impact assessments"},
+    {h:"Breaches",n:byTool.breach, s:"Art. 33/34"},
+    {h:"DPAs",    n:byTool.dpa,    s:"Art. 28"},
+    {h:"Criticals (any tool)", n:criticals, s:"need attention"},
+    {h:"Overdue (>12m, open)", n:overdue,   s:"review/refresh"}
+  ];
+  document.getElementById("kpis").innerHTML = tiles.map(t=>`
+    <div class="kpi">
+      <h3>${esc(t.h)}</h3>
+      <div class="n">${t.n}</div>
+      <small>${esc(t.s)}</small>
+    </div>`).join("");
+}
+
+function renderTabs(records){
+  const counts = {all: records.length};
+  TOOLS.forEach(t=> counts[t.key] = records.filter(r=>r.tool.key===t.key).length);
+  const items = [{key:"all", label:"All"}].concat(TOOLS.map(t=>({key:t.key,label:t.label})));
+  document.getElementById("tabs").innerHTML = items.map(i=>`
+    <button class="${state.tab===i.key?'active':''}" data-tab="${i.key}">
+      ${esc(i.label)}<span class="count">${counts[i.key]||0}</span>
+    </button>`).join("");
+  document.querySelectorAll("#tabs button").forEach(b=>{
+    b.onclick = ()=>{
+      state.tab = b.dataset.tab;
+      const u = new URL(location); u.searchParams.set("tab", state.tab); history.replaceState(null,"",u);
+      render();
+    };
+  });
+}
+
+function refreshFilterOptions(records){
+  const owners = new Set(), statuses = new Set();
+  records.forEach(r=>{ if(r.meta.owner) owners.add(r.meta.owner); if(r.meta.status) statuses.add(r.meta.status); });
+  const setOpts = (id, set, current) => {
+    const sel = document.getElementById(id);
+    const cur = current ?? sel.value;
+    sel.innerHTML = `<option value="">${sel.options[0].text}</option>` + [...set].sort().map(v=>`<option ${v===cur?"selected":""}>${esc(v)}</option>`).join("");
+  };
+  setOpts("fOwner",  owners,   state.owner);
+  setOpts("fStatus", statuses, state.status);
+}
+
+function renderTable(records){
+  const thead = document.getElementById("thead");
+  const tbody = document.getElementById("tbody");
+  const empty = document.getElementById("empty");
+
+  let cols, rows;
+  if(state.tab === "all"){
+    cols = [
+      {h:"Tool",    r:x=>`<span class="badge">${esc(x.tool.label)}</span>`},
+      {h:"Ref",     r:x=>x.meta.ref_no||""},
+      {h:"Subject", r:x=>subjectFor(x)},
+      {h:"Owner",   r:x=>x.meta.owner||""},
+      {h:"Severity/Verdict", r:x=>x.tool.severity ? (x.tool.key==='transfer' ? pillVerdict(x.meta.verdict,x.meta.verdict_class) : pill(x.tool.severity(x.meta))) : ""},
+      {h:"Status",  r:x=>x.meta.status||""},
+      {h:"Updated", r:x=>fmtDate(x.meta.saved_at)},
+      {h:"",        r:x=>`<span class="row-actions"><a href="${x.tool.href}?id=${encodeURIComponent(x.meta.id)}">Open</a></span>`}
+    ];
+    rows = records;
+  } else {
+    const t = TOOLS.find(t=>t.key===state.tab);
+    cols = (t.cols).concat([{h:"", r:m=>`<span class="row-actions"><a href="${t.href}?id=${encodeURIComponent(m.id)}">Open</a></span>`}]);
+    rows = records.filter(r=>r.tool.key===t.key).map(r=>r.meta);
+  }
+
+  thead.innerHTML = `<tr>${cols.map((c,i)=>`<th data-i="${i}">${esc(c.h)}</th>`).join("")}</tr>`;
+  if(!rows.length){
+    tbody.innerHTML = "";
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+  tbody.innerHTML = rows.map(r=>`<tr>${cols.map(c=>`<td>${c.r(r)||""}</td>`).join("")}</tr>`).join("");
+}
+
+function subjectFor(x){
+  const m = x.meta;
+  switch(x.tool.key){
+    case "dpia":     return esc(m.project||m.title||"");
+    case "breach":   return `Art. 33: ${esc(m.art33_status||"—")}`;
+    case "nda":      return esc(m.counterparty||"") + (m.direction?` · ${esc(m.direction)}`:"");
+    case "dpa":      return `${esc(m.controller||"?")} → ${esc(m.processor||"?")}` + (m.intl==="Yes"?" · intl":"");
+    case "contract": return `${esc(m.counterparty||"?")} · ${esc(m.ctype||"?")}`;
+    case "transfer": return `${esc(m.exporter||"?")} → ${esc(m.importer||"?")} (${esc(m.country_name||m.country||"")})`;
+  }
+  return "";
+}
+
+function applyFilters(records){
+  const q = state.q.toLowerCase();
+  return records.filter(({tool, meta:m})=>{
+    if(state.owner && m.owner !== state.owner) return false;
+    if(state.status && m.status !== state.status) return false;
+    if(state.sev){
+      const s = tool.severity ? tool.severity(m) : "";
+      if(s !== state.sev && m.verdict !== state.sev) return false;
+    }
+    if(!q) return true;
+    const hay = [m.ref_no, m.owner, m.counterparty, m.controller, m.processor, m.project, m.title, m.exporter, m.importer, m.country_name, m.ctype, m.verdict, m.status]
+      .filter(Boolean).join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function render(){
+  const all = allRecords();
+  refreshFilterOptions(all);
+  const filtered = applyFilters(all);
+  renderKPIs(all);
+  renderTabs(all);
+  renderTable(filtered);
+}
+
+function exportAll(){
+  const bundle = {
+    schema: "legalai.compliance-hub.bundle/v1",
+    exported_at: new Date().toISOString(),
+    registries: {}
+  };
+  TOOLS.forEach(t=> bundle.registries[t.store] = readReg(t.store));
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], {type:"application/json;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `compliance_hub_bundle_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  flash("Bundle exported");
+}
+
+function importBundle(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    let bundle;
+    try { bundle = JSON.parse(e.target.result); } catch(err){ alert("Invalid JSON."); return; }
+    if(!bundle || !bundle.registries){ alert("Not a compliance-hub bundle."); return; }
+    const counts = [];
+    Object.keys(bundle.registries).forEach(k=>{
+      if(!TOOLS.find(t=>t.store===k)) return;
+      const existing = readReg(k);
+      const incoming = bundle.registries[k] || {};
+      Object.keys(incoming).forEach(id=>{
+        existing[id] = incoming[id];
+      });
+      localStorage.setItem(k, JSON.stringify(existing));
+      counts.push(`${k}: +${Object.keys(incoming).length}`);
+    });
+    flash("Imported · " + counts.join(" · "));
+    render();
+  };
+  reader.readAsText(file);
+}
+
+function clearAll(){
+  if(!confirm("Delete ALL records from every tool's registry on this device? This cannot be undone.")) return;
+  TOOLS.forEach(t=> localStorage.removeItem(t.store));
+  flash("Cleared");
+  render();
+}
+
+(function boot(){
+  const langEl = document.getElementById("lang");
+  langEl.value = localStorage.getItem("dpia_lang") || "en";
+  langEl.addEventListener("change", e => { localStorage.setItem("dpia_lang", e.target.value); });
+
+  document.getElementById("btnRefresh").onclick = render;
+  document.getElementById("btnExport").onclick  = exportAll;
+  document.getElementById("btnClear").onclick   = clearAll;
+  document.getElementById("btnImport").onclick  = ()=> document.getElementById("fileImport").click();
+  document.getElementById("fileImport").onchange = e => { const f=e.target.files[0]; if(f) importBundle(f); e.target.value=""; };
+  document.getElementById("q").oninput          = e => { state.q = e.target.value; render(); };
+  document.getElementById("fStatus").onchange   = e => { state.status = e.target.value; render(); };
+  document.getElementById("fOwner").onchange    = e => { state.owner  = e.target.value; render(); };
+  document.getElementById("fSeverity").onchange = e => { state.sev    = e.target.value; render(); };
+
+  render();
+
+  window.addEventListener("storage", e => {
+    if(TOOLS.some(t=>t.store===e.key)) render();
+  });
+})();
+</script>
+</body>
+</html>

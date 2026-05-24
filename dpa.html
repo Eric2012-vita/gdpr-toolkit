@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DPA Reviewer (Art. 28) — GDPR Toolkit</title>
+<style>
+:root{--bg:#0b1020;--panel:#121933;--ink:#e8ecf7;--muted:#9aa3c0;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--accent:#6366f1;--line:#26305a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:#0a0f24;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;flex:1}
+header a,header select,header button{color:var(--ink);background:#1a2347;border:1px solid var(--line);border-radius:8px;padding:6px 10px;text-decoration:none;font-size:13px;cursor:pointer}
+header a:hover,header button:hover{border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-12{grid-column:span 12}
+@media (max-width:780px){.col-6,.col-4,.col-3{grid-column:span 12}}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;background:#0e1530;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font:inherit}
+textarea{min-height:80px;resize:vertical}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line)}
+.pill.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
+.pill.warn{background:rgba(245,158,11,.12);color:#fcd34d;border-color:#78350f}
+.pill.bad{background:rgba(239,68,68,.12);color:#fca5a5;border-color:#7f1d1d}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.steps button{background:#0e1530;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:999px;cursor:pointer;font-size:12px}
+.steps button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600}
+.btn.alt{background:#1a2347;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.findings li{margin:6px 0}
+.findings .bad{color:#fca5a5}.findings .warn{color:#fcd34d}.findings .ok{color:#86efac}
+small.hint{color:var(--muted)}
+h2{font-size:15px;margin:0 0 8px 0}
+h3{font-size:13px;margin:14px 0 6px 0;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kv{display:grid;grid-template-columns:200px 1fr;gap:6px 12px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+.checks label{display:flex;align-items:flex-start;gap:8px;color:var(--ink);font-size:13px;margin:6px 0}
+.checks label input{width:auto;margin-top:3px}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>DPA Reviewer (Art. 28) <small class="hint">· GDPR Toolkit</small></h1>
+  <a href="dashboard.html">← Dashboard</a>
+  <a href="dpia.html">DPIA</a>
+  <a href="nda.html">NDA</a>
+  <a href="breach.html">Breach</a>
+  <select id="lang" aria-label="Language">
+    <option value="en">EN</option><option value="fr">FR</option><option value="de">DE</option><option value="it">IT</option>
+  </select>
+</header>
+<main>
+  <div class="card">
+    <div class="steps" id="steps"></div>
+    <div id="stepBody"></div>
+    <div class="actions">
+      <button class="btn alt" id="btnPrev">← Prev</button>
+      <button class="btn" id="btnNext">Next →</button>
+      <button class="btn alt" id="btnAssess">Assess</button>
+      <button class="btn alt" id="btnSave">Save</button>
+      <button class="btn alt" id="btnLoad">Load</button>
+      <button class="btn alt" id="btnHTML">Export HTML</button>
+      <button class="btn alt" id="btnJSON">Export JSON</button>
+      <button class="btn alt" id="btnPrint">Print</button>
+    </div>
+  </div>
+  <div class="card" id="resultCard" style="display:none">
+    <h2>DPA Gap Analysis</h2>
+    <div id="resultSummary"></div>
+    <h3>Findings</h3>
+    <ul class="findings" id="findings"></ul>
+    <h3>Recommended Clauses</h3>
+    <ul class="findings" id="redlines"></ul>
+  </div>
+</main>
+<script>
+/* === END PART 1 === */
+const I18N = {
+  en:{steps:["Parties","Processing","Art. 28(3)","Sub-processors","Transfers","Review"]},
+  fr:{steps:["Parties","Traitement","Art. 28(3)","Sous-traitants","Transferts","Revue"]},
+  de:{steps:["Parteien","Verarbeitung","Art. 28(3)","Unterauftragsverarbeiter","Transfers","Prüfung"]},
+  it:{steps:["Parti","Trattamento","Art. 28(3)","Subresponsabili","Trasferimenti","Revisione"]}
+};
+let STEP = 1;
+const STATE = {
+  meta:{id:null,type:"dpa",ref_no:"",owner:"",counterparty:"",status:"draft",saved_at:null},
+  parties:{controller:"",processor:"",our_role:"controller"},
+  processing:{purpose:"",duration_months:24,categories_data:"",categories_subjects:"",special_categories:false,volume:"med"},
+  art28:{
+    documented_instructions:false,
+    confidentiality_personnel:false,
+    security_measures:false,
+    subprocessor_authorization:"none",
+    data_subject_rights_assist:false,
+    breach_assist:false,
+    dpia_assist:false,
+    return_or_delete:false,
+    audit_right:false,
+    audit_mechanism:"none"
+  },
+  subs:{has_subs:false,list:"",flow_down:false,prior_consent_days:30,objection_right:false},
+  transfers:{cross_border:false,destinations:"",mechanism:"none",tia_done:false},
+  toms:{encryption_in_transit:false,encryption_at_rest:false,pseudonymisation:false,access_controls:false,logging:false,backups:false,incident_response:false,training:false},
+  notes:""
+};
+function $(id){return document.getElementById(id)}
+function t(){return I18N[localStorage.getItem("dpia_lang")||"en"]||I18N.en;}
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function cb(id,checked,label){return `<label><input type="checkbox" id="${id}" ${checked?'checked':''}/> ${label}</label>`;}
+function renderSteps(){
+  const s=t().steps;
+  $("steps").innerHTML=s.map((label,i)=>`<button data-step="${i+1}" class="${STEP===i+1?'active':''}">${i+1}. ${esc(label)}</button>`).join("");
+  [...$("steps").querySelectorAll("button")].forEach(b=>b.onclick=()=>go(parseInt(b.dataset.step,10)));
+}
+function go(n){
+  STEP=Math.max(1,Math.min(6,n));
+  renderSteps();
+  const body=$("stepBody");
+  if(STEP===1){
+    body.innerHTML=`<h2>1. Parties</h2><div class="row">
+      <div class="col-4"><label>Reference no.</label><input id="ref_no" value="${esc(STATE.meta.ref_no)}"/></div>
+      <div class="col-4"><label>Owner</label><input id="owner" value="${esc(STATE.meta.owner)}"/></div>
+      <div class="col-4"><label>Counterparty</label><input id="counterparty" value="${esc(STATE.meta.counterparty)}"/></div>
+      <div class="col-6"><label>Controller</label><input id="controller" value="${esc(STATE.parties.controller)}"/></div>
+      <div class="col-6"><label>Processor</label><input id="processor" value="${esc(STATE.parties.processor)}"/></div>
+      <div class="col-6"><label>Our role</label><select id="our_role">
+        <option value="controller" ${STATE.parties.our_role==='controller'?'selected':''}>Controller</option>
+        <option value="processor" ${STATE.parties.our_role==='processor'?'selected':''}>Processor</option>
+        <option value="joint" ${STATE.parties.our_role==='joint'?'selected':''}>Joint controller</option>
+      </select></div>
+    </div>`;
+  }
+  if(STEP===2){
+    body.innerHTML=`<h2>2. Processing description (Art. 28(3) header)</h2><div class="row">
+      <div class="col-12"><label>Subject-matter / purpose of processing</label><textarea id="purpose">${esc(STATE.processing.purpose)}</textarea></div>
+      <div class="col-4"><label>Duration (months)</label><input id="duration_months" type="number" value="${STATE.processing.duration_months}"/></div>
+      <div class="col-4"><label>Volume</label><select id="volume">
+        <option value="low" ${STATE.processing.volume==='low'?'selected':''}>Low</option>
+        <option value="med" ${STATE.processing.volume==='med'?'selected':''}>Medium</option>
+        <option value="high" ${STATE.processing.volume==='high'?'selected':''}>High</option>
+      </select></div>
+      <div class="col-4">${cb("special_categories",STATE.processing.special_categories,"Special categories / criminal data")}</div>
+      <div class="col-6"><label>Categories of data</label><input id="categories_data" value="${esc(STATE.processing.categories_data)}" placeholder="contact, financial, location…"/></div>
+      <div class="col-6"><label>Categories of data subjects</label><input id="categories_subjects" value="${esc(STATE.processing.categories_subjects)}" placeholder="customers, employees, minors…"/></div>
+    </div>`;
+  }
+  if(STEP===3){
+    body.innerHTML=`<h2>3. Art. 28(3) clauses present?</h2><div class="checks">
+      ${cb("documented_instructions",STATE.art28.documented_instructions,"(a) Processes only on documented instructions from controller (incl. transfers)")}
+      ${cb("confidentiality_personnel",STATE.art28.confidentiality_personnel,"(b) Personnel committed to confidentiality / statutory duty")}
+      ${cb("security_measures",STATE.art28.security_measures,"(c) Takes all measures required by Art. 32 (security)")}
+      <div class="row"><div class="col-6"><label>(d) Sub-processor authorization</label><select id="subprocessor_authorization">
+        <option value="none" ${STATE.art28.subprocessor_authorization==='none'?'selected':''}>Not addressed</option>
+        <option value="specific" ${STATE.art28.subprocessor_authorization==='specific'?'selected':''}>Specific written authorization</option>
+        <option value="general" ${STATE.art28.subprocessor_authorization==='general'?'selected':''}>General with notice + objection</option>
+      </select></div></div>
+      ${cb("data_subject_rights_assist",STATE.art28.data_subject_rights_assist,"(e) Assists controller with data subject rights (Ch. III)")}
+      ${cb("breach_assist",STATE.art28.breach_assist,"(f) Assists with Art. 32–36 (security, breach, DPIA, consultation)")}
+      ${cb("dpia_assist",STATE.art28.dpia_assist,"(f-bis) Assists with DPIA / prior consultation specifically")}
+      ${cb("return_or_delete",STATE.art28.return_or_delete,"(g) Returns or deletes personal data at end of services")}
+      ${cb("audit_right",STATE.art28.audit_right,"(h) Makes available info + allows audits / inspections")}
+      <div class="row"><div class="col-6"><label>Audit mechanism</label><select id="audit_mechanism">
+        <option value="none" ${STATE.art28.audit_mechanism==='none'?'selected':''}>None / not stated</option>
+        <option value="onsite" ${STATE.art28.audit_mechanism==='onsite'?'selected':''}>On-site audit right</option>
+        <option value="third_party" ${STATE.art28.audit_mechanism==='third_party'?'selected':''}>Third-party report (e.g., ISO 27001, SOC 2)</option>
+        <option value="questionnaire" ${STATE.art28.audit_mechanism==='questionnaire'?'selected':''}>Questionnaire only</option>
+      </select></div></div>
+    </div>`;
+  }
+  if(STEP===4){
+    body.innerHTML=`<h2>4. Sub-processors</h2><div class="row">
+      <div class="col-12">${cb("has_subs",STATE.subs.has_subs,"Processor uses sub-processors")}</div>
+      <div class="col-12"><label>Sub-processor list</label><textarea id="sub_list" placeholder="Name — service — country">${esc(STATE.subs.list)}</textarea></div>
+      <div class="col-6">${cb("flow_down",STATE.subs.flow_down,"Back-to-back GDPR flow-down to sub-processors")}</div>
+      <div class="col-3"><label>Prior consent / notice (days)</label><input id="prior_consent_days" type="number" value="${STATE.subs.prior_consent_days}"/></div>
+      <div class="col-3">${cb("objection_right",STATE.subs.objection_right,"Controller objection right")}</div>
+    </div>`;
+  }
+  if(STEP===5){
+    body.innerHTML=`<h2>5. International transfers &amp; TOMs</h2><div class="row">
+      <div class="col-6">${cb("cross_border",STATE.transfers.cross_border,"Data leaves EU/EEA/UK/CH")}</div>
+      <div class="col-6"><label>Destinations</label><input id="destinations" value="${esc(STATE.transfers.destinations)}"/></div>
+      <div class="col-6"><label>Transfer mechanism</label><select id="mechanism">
+        <option value="none" ${STATE.transfers.mechanism==='none'?'selected':''}>None / not addressed</option>
+        <option value="adequacy" ${STATE.transfers.mechanism==='adequacy'?'selected':''}>Adequacy decision</option>
+        <option value="sccs" ${STATE.transfers.mechanism==='sccs'?'selected':''}>SCCs (2021/914)</option>
+        <option value="bcr" ${STATE.transfers.mechanism==='bcr'?'selected':''}>BCRs</option>
+        <option value="dpf" ${STATE.transfers.mechanism==='dpf'?'selected':''}>EU-US Data Privacy Framework</option>
+        <option value="derogation" ${STATE.transfers.mechanism==='derogation'?'selected':''}>Art. 49 derogation</option>
+      </select></div>
+      <div class="col-6">${cb("tia_done",STATE.transfers.tia_done,"Transfer Impact Assessment completed (Schrems II)")}</div>
+    </div>
+    <h3>Technical &amp; Organizational Measures (Art. 32)</h3>
+    <div class="checks">
+      ${cb("encryption_in_transit",STATE.toms.encryption_in_transit,"Encryption in transit (TLS)")}
+      ${cb("encryption_at_rest",STATE.toms.encryption_at_rest,"Encryption at rest")}
+      ${cb("pseudonymisation",STATE.toms.pseudonymisation,"Pseudonymisation where appropriate")}
+      ${cb("access_controls",STATE.toms.access_controls,"Role-based access controls + MFA")}
+      ${cb("logging",STATE.toms.logging,"Audit logging / monitoring")}
+      ${cb("backups",STATE.toms.backups,"Tested backups / restoration")}
+      ${cb("incident_response",STATE.toms.incident_response,"Documented incident response plan")}
+      ${cb("training",STATE.toms.training,"Regular staff training")}
+    </div>
+    <div class="row"><div class="col-12"><label>Notes</label><textarea id="notes">${esc(STATE.notes)}</textarea></div></div>`;
+  }
+  if(STEP===6){
+    body.innerHTML=`<h2>6. Review &amp; Assess</h2>
+      <p>Click <b>Assess</b> to score the DPA against Art. 28(3)(a–h) and TOMs (Art. 32).</p>
+      <div class="kv">
+        <div>Ref</div><div>${esc(STATE.meta.ref_no)||"—"}</div>
+        <div>Counterparty</div><div>${esc(STATE.meta.counterparty)||"—"}</div>
+        <div>Our role</div><div>${esc(STATE.parties.our_role)}</div>
+        <div>Purpose</div><div>${esc(STATE.processing.purpose)||"—"}</div>
+        <div>Special cats?</div><div>${STATE.processing.special_categories?"Yes":"No"}</div>
+        <div>Sub-processors?</div><div>${STATE.subs.has_subs?"Yes":"No"}</div>
+        <div>Cross-border?</div><div>${STATE.transfers.cross_border?(esc(STATE.transfers.destinations)||"yes"):"no"} · ${esc(STATE.transfers.mechanism)}</div>
+      </div>`;
+  }
+}
+function collect(){
+  const v=id=>{const el=$(id);if(!el)return undefined;return el.type==='checkbox'?el.checked:el.value;};
+  if(STEP===1){
+    STATE.meta.ref_no=v("ref_no")??STATE.meta.ref_no;
+    STATE.meta.owner=v("owner")??STATE.meta.owner;
+    STATE.meta.counterparty=v("counterparty")??STATE.meta.counterparty;
+    STATE.parties.controller=v("controller")??STATE.parties.controller;
+    STATE.parties.processor=v("processor")??STATE.parties.processor;
+    STATE.parties.our_role=v("our_role")??STATE.parties.our_role;
+  }
+  if(STEP===2){
+    STATE.processing.purpose=v("purpose")??STATE.processing.purpose;
+    STATE.processing.duration_months=parseInt(v("duration_months")||"0",10);
+    STATE.processing.volume=v("volume")??STATE.processing.volume;
+    STATE.processing.special_categories=!!v("special_categories");
+    STATE.processing.categories_data=v("categories_data")??STATE.processing.categories_data;
+    STATE.processing.categories_subjects=v("categories_subjects")??STATE.processing.categories_subjects;
+  }
+  if(STEP===3){
+    STATE.art28.documented_instructions=!!v("documented_instructions");
+    STATE.art28.confidentiality_personnel=!!v("confidentiality_personnel");
+    STATE.art28.security_measures=!!v("security_measures");
+    STATE.art28.subprocessor_authorization=v("subprocessor_authorization")??STATE.art28.subprocessor_authorization;
+    STATE.art28.data_subject_rights_assist=!!v("data_subject_rights_assist");
+    STATE.art28.breach_assist=!!v("breach_assist");
+    STATE.art28.dpia_assist=!!v("dpia_assist");
+    STATE.art28.return_or_delete=!!v("return_or_delete");
+    STATE.art28.audit_right=!!v("audit_right");
+    STATE.art28.audit_mechanism=v("audit_mechanism")??STATE.art28.audit_mechanism;
+  }
+  if(STEP===4){
+    STATE.subs.has_subs=!!v("has_subs");
+    STATE.subs.list=v("sub_list")??STATE.subs.list;
+    STATE.subs.flow_down=!!v("flow_down");
+    STATE.subs.prior_consent_days=parseInt(v("prior_consent_days")||"0",10);
+    STATE.subs.objection_right=!!v("objection_right");
+  }
+  if(STEP===5){
+    STATE.transfers.cross_border=!!v("cross_border");
+    STATE.transfers.destinations=v("destinations")??STATE.transfers.destinations;
+    STATE.transfers.mechanism=v("mechanism")??STATE.transfers.mechanism;
+    STATE.transfers.tia_done=!!v("tia_done");
+    ["encryption_in_transit","encryption_at_rest","pseudonymisation","access_controls","logging","backups","incident_response","training"].forEach(k=>{STATE.toms[k]=!!v(k);});
+    STATE.notes=v("notes")??STATE.notes;
+  }
+}
+function assess(){
+  collect();
+  const f=[],r=[];
+  // Art. 28(3)(a-h) gap analysis
+  if(!STATE.art28.documented_instructions){f.push({level:"bad",msg:"(a) Missing 'documented instructions only' clause."});r.push("Add: 'Processor shall process personal data only on documented instructions from the Controller, including with regard to transfers to a third country, unless required by Union or Member State law.'");}
+  if(!STATE.art28.confidentiality_personnel){f.push({level:"bad",msg:"(b) Missing confidentiality undertakings by personnel."});r.push("Add: 'Processor ensures that persons authorized to process personal data are bound by confidentiality or are under an appropriate statutory obligation.'");}
+  if(!STATE.art28.security_measures){f.push({level:"bad",msg:"(c) Missing Art. 32 security measures commitment."});r.push("Add: 'Processor takes all measures required pursuant to Article 32' and attach TOMs as an annex.");}
+  if(STATE.art28.subprocessor_authorization==="none"){f.push({level:"bad",msg:"(d) Sub-processor authorization regime not stated."});r.push("Add a specific or general authorization clause with prior written notice + objection right (Art. 28(2)+(4)).");}
+  if(!STATE.art28.data_subject_rights_assist){f.push({level:"bad",msg:"(e) Missing assistance with data subject rights."});r.push("Add: 'Taking into account the nature of the processing, Processor assists Controller by appropriate technical and organizational measures to fulfill obligations to respond to requests for exercising the data subject's rights (Ch. III).'");}
+  if(!STATE.art28.breach_assist){f.push({level:"bad",msg:"(f) Missing assistance with security/breach/DPIA obligations."});r.push("Add: 'Processor assists Controller in ensuring compliance with obligations under Articles 32 to 36, taking into account the nature of processing and information available.'");}
+  if(!STATE.art28.dpia_assist){f.push({level:"warn",msg:"(f-bis) DPIA / prior-consultation assistance not specifically called out."});r.push("Explicitly reference Art. 35 and Art. 36 assistance.");}
+  if(!STATE.art28.return_or_delete){f.push({level:"bad",msg:"(g) No return-or-delete obligation."});r.push("Add: 'At the choice of the Controller, Processor deletes or returns all personal data after the end of the provision of services, and deletes existing copies unless Union or Member State law requires storage.'");}
+  if(!STATE.art28.audit_right){f.push({level:"bad",msg:"(h) Missing audit / information rights."});r.push("Add: 'Processor makes available to the Controller all information necessary to demonstrate compliance with Art. 28 and allows for and contributes to audits, including inspections, conducted by the Controller or another auditor mandated by the Controller.'");}
+  if(STATE.art28.audit_mechanism==="none"){f.push({level:"warn",msg:"Audit mechanism not specified."});r.push("Specify scope, notice period, frequency, cost allocation, and acceptable third-party reports.");}
+  if(STATE.art28.audit_mechanism==="questionnaire"){f.push({level:"warn",msg:"Audit limited to questionnaires — weak."});r.push("Add at least third-party report (SOC 2 / ISO 27001) plus on-site right for cause.");}
+  // Sub-processor governance
+  if(STATE.subs.has_subs && !STATE.subs.flow_down){f.push({level:"bad",msg:"Sub-processors used without back-to-back GDPR flow-down."});r.push("Add Art. 28(4) flow-down: 'Where Processor engages another processor, the same data protection obligations as set out in this DPA shall be imposed on that other processor by way of a contract.'");}
+  if(STATE.subs.has_subs && !STATE.subs.objection_right){f.push({level:"warn",msg:"No controller objection right on sub-processor changes."});r.push("Add objection right with minimum 30-day prior notice.");}
+  // Transfers
+  if(STATE.transfers.cross_border && STATE.transfers.mechanism==="none"){f.push({level:"bad",msg:"Cross-border transfer without Chapter V mechanism."});r.push("Adopt SCCs (2021/914) or rely on adequacy / DPF certification.");}
+  if(STATE.transfers.cross_border && STATE.transfers.mechanism==="sccs" && !STATE.transfers.tia_done){f.push({level:"warn",msg:"SCCs in place but no Transfer Impact Assessment documented."});r.push("Complete a TIA per EDPB Recommendations 01/2020 (Schrems II).");}
+  if(STATE.transfers.cross_border && STATE.transfers.mechanism==="derogation"){f.push({level:"warn",msg:"Reliance on Art. 49 derogation — narrow and exceptional."});r.push("Confirm derogation is occasional, non-massive, and documented.");}
+  // TOMs
+  const tomMissing = Object.entries(STATE.toms).filter(([k,v])=>!v).map(([k])=>k);
+  if(tomMissing.length>=4){f.push({level:"warn",msg:`${tomMissing.length} core TOMs not confirmed: ${tomMissing.join(", ")}.`});r.push("Document missing measures or justify why they are not appropriate.");}
+  if(!STATE.toms.encryption_in_transit){f.push({level:"bad",msg:"Encryption in transit not confirmed."});r.push("Mandate TLS 1.2+ for all personal data in transit.");}
+  if(STATE.processing.special_categories && !STATE.toms.encryption_at_rest){f.push({level:"bad",msg:"Special-category data without encryption at rest."});r.push("Require encryption at rest with documented key management.");}
+
+  const bad=f.filter(x=>x.level==="bad").length;
+  const warn=f.filter(x=>x.level==="warn").length;
+  const band=bad>=3?"High":(bad>0?"Medium-High":(warn>=3?"Medium":(warn>0?"Low-Medium":"Low")));
+  $("resultCard").style.display="block";
+  $("resultSummary").innerHTML=`<div class="kv">
+    <div>Compliance band</div><div><span class="pill ${bad>0?'bad':(warn>0?'warn':'ok')}">${band}</span></div>
+    <div>Gaps (bad)</div><div>${bad}</div>
+    <div>Warnings</div><div>${warn}</div></div>`;
+  $("findings").innerHTML=f.length?f.map(x=>`<li class="${x.level}">${esc(x.msg)}</li>`).join(""):"<li class='ok'>No gaps detected against Art. 28(3).</li>";
+  $("redlines").innerHTML=r.length?r.map(x=>`<li>${esc(x)}</li>`).join(""):"<li>None.</li>";
+  STATE._assessment={band,bad,warn,findings:f,redlines:r,at:new Date().toISOString()};
+}
+/* === END PART 2 === */
+function registry(){
+  try{return JSON.parse(localStorage.getItem("dpa_registry_v1")||"{}");}catch(e){return {};}
+}
+function writeRegistry(reg){localStorage.setItem("dpa_registry_v1",JSON.stringify(reg));}
+function saveLocal(){
+  collect();
+  if(!STATE.meta.id) STATE.meta.id="dpa_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,6);
+  STATE.meta.saved_at=new Date().toISOString();
+  const reg=registry();
+  reg[STATE.meta.id]=STATE;
+  writeRegistry(reg);
+  alert("Saved. ID: "+STATE.meta.id);
+}
+function loadLocal(){
+  const id=prompt("Enter DPA ID to load:");
+  if(!id) return;
+  const reg=registry();
+  if(!reg[id]){alert("Not found.");return;}
+  Object.assign(STATE,reg[id]);
+  go(1);
+}
+function buildReportHTML(){
+  const a=STATE._assessment||{band:"—",bad:0,warn:0,findings:[],redlines:[]};
+  const row=(k,v)=>`<tr><td style="color:#666;padding:4px 8px">${esc(k)}</td><td style="padding:4px 8px">${esc(v)}</td></tr>`;
+  const check=(k,v)=>`<tr><td style="color:#666;padding:4px 8px">${esc(k)}</td><td style="padding:4px 8px">${v?"✓":"✗"}</td></tr>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>DPA Review ${esc(STATE.meta.ref_no)}</title>
+  <style>body{font:13px/1.5 system-ui;margin:24px;color:#111}h1{font-size:18px}h2{font-size:14px;margin-top:18px}table{border-collapse:collapse;width:100%}td{vertical-align:top;border-bottom:1px solid #eee}.pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd}.bad{background:#fee;color:#900}.warn{background:#ffe;color:#960}.ok{background:#efe;color:#060}</style>
+  </head><body>
+  <h1>DPA Review — ${esc(STATE.meta.ref_no||"(no ref)")}</h1>
+  <p>Saved: ${esc(STATE.meta.saved_at||"—")} · Owner: ${esc(STATE.meta.owner)} · Counterparty: ${esc(STATE.meta.counterparty)}</p>
+  <h2>Parties</h2><table>
+    ${row("Controller",STATE.parties.controller)}${row("Processor",STATE.parties.processor)}${row("Our role",STATE.parties.our_role)}
+  </table>
+  <h2>Processing</h2><table>
+    ${row("Purpose",STATE.processing.purpose)}${row("Duration (months)",STATE.processing.duration_months)}
+    ${row("Volume",STATE.processing.volume)}${row("Special categories",STATE.processing.special_categories?"Yes":"No")}
+    ${row("Categories of data",STATE.processing.categories_data)}${row("Categories of subjects",STATE.processing.categories_subjects)}
+  </table>
+  <h2>Art. 28(3) checklist</h2><table>
+    ${check("(a) Documented instructions",STATE.art28.documented_instructions)}
+    ${check("(b) Confidentiality of personnel",STATE.art28.confidentiality_personnel)}
+    ${check("(c) Art. 32 security measures",STATE.art28.security_measures)}
+    ${row("(d) Sub-processor authorization",STATE.art28.subprocessor_authorization)}
+    ${check("(e) Assist with data subject rights",STATE.art28.data_subject_rights_assist)}
+    ${check("(f) Assist with Art. 32–36",STATE.art28.breach_assist)}
+    ${check("(f-bis) DPIA / prior consultation assistance",STATE.art28.dpia_assist)}
+    ${check("(g) Return or delete at end",STATE.art28.return_or_delete)}
+    ${check("(h) Audit / information",STATE.art28.audit_right)}
+    ${row("Audit mechanism",STATE.art28.audit_mechanism)}
+  </table>
+  <h2>Sub-processors</h2><table>
+    ${check("Has sub-processors",STATE.subs.has_subs)}
+    ${row("List",STATE.subs.list)}
+    ${check("Back-to-back flow-down",STATE.subs.flow_down)}
+    ${row("Prior consent / notice (days)",STATE.subs.prior_consent_days)}
+    ${check("Objection right",STATE.subs.objection_right)}
+  </table>
+  <h2>International transfers</h2><table>
+    ${check("Cross-border",STATE.transfers.cross_border)}
+    ${row("Destinations",STATE.transfers.destinations)}
+    ${row("Mechanism",STATE.transfers.mechanism)}
+    ${check("TIA completed",STATE.transfers.tia_done)}
+  </table>
+  <h2>TOMs (Art. 32)</h2><table>
+    ${check("Encryption in transit",STATE.toms.encryption_in_transit)}
+    ${check("Encryption at rest",STATE.toms.encryption_at_rest)}
+    ${check("Pseudonymisation",STATE.toms.pseudonymisation)}
+    ${check("Access controls + MFA",STATE.toms.access_controls)}
+    ${check("Logging / monitoring",STATE.toms.logging)}
+    ${check("Tested backups",STATE.toms.backups)}
+    ${check("Incident response plan",STATE.toms.incident_response)}
+    ${check("Staff training",STATE.toms.training)}
+  </table>
+  <h2>Assessment</h2>
+  <p>Compliance band: <span class="pill ${a.bad>0?'bad':(a.warn>0?'warn':'ok')}">${esc(a.band)}</span> · Gaps: ${a.bad} · Warnings: ${a.warn}</p>
+  <h3>Findings</h3><ul>${a.findings.map(x=>`<li class="${x.level}">${esc(x.msg)}</li>`).join("")||"<li>None.</li>"}</ul>
+  <h3>Recommended clauses</h3><ul>${a.redlines.map(x=>`<li>${esc(x)}</li>`).join("")||"<li>None.</li>"}</ul>
+  <p style="margin-top:24px;color:#888;font-size:11px">Generated by GDPR Toolkit — DPA Reviewer. Not legal advice.</p>
+  </body></html>`;
+}
+function download(name,data,mime){
+  const blob=new Blob([data],{type:mime||"application/octet-stream"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},500);
+}
+function exportHTML(){
+  assess();
+  const html=buildReportHTML();
+  download(`dpa_${(STATE.meta.ref_no||"report").replace(/\W+/g,"_")}.html`,html,"text/html");
+}
+function exportJSON(){
+  assess();
+  const payload={meta:STATE.meta,parties:STATE.parties,processing:STATE.processing,art28:STATE.art28,subs:STATE.subs,transfers:STATE.transfers,toms:STATE.toms,notes:STATE.notes,assessment:STATE._assessment};
+  download(`dpa_${(STATE.meta.ref_no||"report").replace(/\W+/g,"_")}.json`,JSON.stringify(payload,null,2),"application/json");
+}
+(function boot(){
+  const lang=localStorage.getItem("dpia_lang")||"en";
+  $("lang").value=lang;
+  $("lang").onchange=()=>{localStorage.setItem("dpia_lang",$("lang").value);renderSteps();go(STEP);};
+  $("btnPrev").onclick=()=>{collect();go(STEP-1);};
+  $("btnNext").onclick=()=>{collect();go(STEP+1);};
+  $("btnAssess").onclick=assess;
+  $("btnSave").onclick=saveLocal;
+  $("btnLoad").onclick=loadLocal;
+  $("btnHTML").onclick=exportHTML;
+  $("btnJSON").onclick=exportJSON;
+  $("btnPrint").onclick=()=>window.print();
+  const params=new URLSearchParams(location.search);
+  const id=params.get("id");
+  if(id){
+    const reg=registry();
+    if(reg[id]){Object.assign(STATE,reg[id]);}
+  }
+  if(params.get("new")==="1"){STATE.meta.id=null;STATE.meta.saved_at=null;}
+  renderSteps();
+  go(1);
+})();
+</script>
+</body>
+</html>

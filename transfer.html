@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Cross-Border Transfer Advisor — GDPR Toolkit</title>
+<style>
+:root{--bg:#0b1020;--panel:#121933;--ink:#e8ecf7;--muted:#9aa3c0;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--accent:#6366f1;--line:#26305a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:#0a0f24;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;flex:1}
+header a,header select,header button{color:var(--ink);background:#1a2347;border:1px solid var(--line);border-radius:8px;padding:6px 10px;text-decoration:none;font-size:13px;cursor:pointer}
+header a:hover,header button:hover{border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-12{grid-column:span 12}
+@media (max-width:780px){.col-6,.col-4,.col-3{grid-column:span 12}}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;background:#0e1530;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font:inherit}
+textarea{min-height:80px;resize:vertical}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line)}
+.pill.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
+.pill.warn{background:rgba(245,158,11,.12);color:#fcd34d;border-color:#78350f}
+.pill.bad{background:rgba(239,68,68,.12);color:#fca5a5;border-color:#7f1d1d}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.steps button{background:#0e1530;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:999px;cursor:pointer;font-size:12px}
+.steps button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600}
+.btn.alt{background:#1a2347;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.findings li{margin:6px 0}
+.findings .bad{color:#fca5a5}.findings .warn{color:#fcd34d}.findings .ok{color:#86efac}
+small.hint{color:var(--muted)}
+h2{font-size:15px;margin:0 0 8px 0}
+h3{font-size:13px;margin:14px 0 6px 0;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kv{display:grid;grid-template-columns:200px 1fr;gap:6px 12px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+.checks label{display:flex;align-items:flex-start;gap:8px;color:var(--ink);font-size:13px;margin:6px 0}
+.checks label input{width:auto;margin-top:3px}
+.country-card{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#0e1530}
+.country-card h4{margin:0 0 6px 0;font-size:13px;color:#cdd5f5}
+.country-card .src{font-size:11px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Cross-Border Transfer Advisor <small class="hint">· GDPR Toolkit · Ch. V / Schrems II</small></h1>
+  <a href="dashboard.html">← Dashboard</a>
+  <a href="dpia.html">DPIA</a>
+  <a href="dpa.html">DPA</a>
+  <a href="contract.html">Contract</a>
+  <select id="lang" aria-label="Language">
+    <option value="en">EN</option><option value="fr">FR</option><option value="de">DE</option><option value="it">IT</option>
+  </select>
+</header>
+<main>
+  <div class="card">
+    <div class="steps" id="steps"></div>
+    <div id="stepBody"></div>
+    <div class="actions">
+      <button class="btn alt" id="btnPrev">← Prev</button>
+      <button class="btn" id="btnNext">Next →</button>
+      <button class="btn alt" id="btnAssess">Assess</button>
+      <button class="btn alt" id="btnSave">Save</button>
+      <button class="btn alt" id="btnLoad">Load</button>
+      <button class="btn alt" id="btnHTML">Export HTML</button>
+      <button class="btn alt" id="btnJSON">Export JSON</button>
+      <button class="btn alt" id="btnPrint">Print</button>
+    </div>
+  </div>
+  <div class="card" id="resultCard" style="display:none">
+    <h2>Transfer Impact Assessment</h2>
+    <div id="resultSummary"></div>
+    <h3>Findings</h3>
+    <ul class="findings" id="findings"></ul>
+    <h3>Recommended Safeguards</h3>
+    <ul class="findings" id="redlines"></ul>
+    <h3>Destination Country Profile</h3>
+    <div id="countryProfile"></div>
+  </div>
+</main>
+<script>
+/* === END PART 1 === */
+const I18N = {
+  en:{steps:["Mapping","Mechanism","Destination","Government access","Supplementary measures","Review"]},
+  fr:{steps:["Cartographie","Mécanisme","Destination","Accès gouvernemental","Mesures supplémentaires","Revue"]},
+  de:{steps:["Mapping","Mechanismus","Ziel","Behördenzugriff","Zusätzliche Maßnahmen","Prüfung"]},
+  it:{steps:["Mappatura","Meccanismo","Destinazione","Accesso governativo","Misure supplementari","Revisione"]}
+};
+// Country-risk knowledge base. Not legal advice; verify the latest position before relying.
+const COUNTRY_DB = {
+  "EU":{adequacy:"native",risk:"low",notes:"EU/EEA member — no Chapter V transfer.",sources:["EUR-Lex GDPR Art. 44–50"]},
+  "UK":{adequacy:"yes",risk:"low-medium",notes:"Adequacy decision in force (2021), under periodic review. IPA 2016 surveillance regime noted by EDPB.",sources:["Commission Implementing Decision (EU) 2021/1772"]},
+  "CH":{adequacy:"yes",risk:"low",notes:"Adequacy decision; revised Swiss FADP aligned to GDPR.",sources:["Commission Decision 2000/518/EC; FADP revisions 2023"]},
+  "US":{adequacy:"partial",risk:"medium-high",notes:"EU-US Data Privacy Framework (2023) certified entities only. FISA §702 + EO 12333 raised in Schrems II — TIA still required; rely on EO 14086 redress mechanism if DPF used.",sources:["Commission Implementing Decision (EU) 2023/1795","EO 14086","CJEU C-311/18 Schrems II"]},
+  "CA":{adequacy:"yes",risk:"low-medium",notes:"Adequacy for commercial organizations under PIPEDA.",sources:["Commission Decision 2002/2/EC"]},
+  "JP":{adequacy:"yes",risk:"low-medium",notes:"Mutual adequacy with EU since 2019; Supplementary Rules apply.",sources:["Commission Implementing Decision (EU) 2019/419"]},
+  "KR":{adequacy:"yes",risk:"low-medium",notes:"Adequacy decision since Dec 2021 covering commercial operators (PIPA).",sources:["Commission Implementing Decision (EU) 2022/254"]},
+  "NZ":{adequacy:"yes",risk:"low",notes:"Adequacy in force.",sources:["Commission Decision 2013/65/EU"]},
+  "IL":{adequacy:"yes",risk:"medium",notes:"Adequacy in force; surveillance environment warrants TIA scrutiny.",sources:["Commission Decision 2011/61/EU"]},
+  "AR":{adequacy:"yes",risk:"medium",notes:"Adequacy in force.",sources:["Commission Decision 2003/490/EC"]},
+  "UY":{adequacy:"yes",risk:"low-medium",notes:"Adequacy in force.",sources:["Commission Implementing Decision 2012/484/EU"]},
+  "AD":{adequacy:"yes",risk:"low",notes:"Adequacy in force.",sources:["Commission Decision 2010/625/EU"]},
+  "FO":{adequacy:"yes",risk:"low",notes:"Adequacy (Faroe Islands).",sources:["Commission Decision 2010/146/EU"]},
+  "GG":{adequacy:"yes",risk:"low",notes:"Guernsey adequacy.",sources:["Commission Decision 2003/821/EC"]},
+  "JE":{adequacy:"yes",risk:"low",notes:"Jersey adequacy.",sources:["Commission Decision 2008/393/EC"]},
+  "IM":{adequacy:"yes",risk:"low",notes:"Isle of Man adequacy.",sources:["Commission Decision 2004/411/EC"]},
+  "IN":{adequacy:"no",risk:"medium-high",notes:"No adequacy. Digital Personal Data Protection Act 2023 in force; broad government-access provisions.",sources:["DPDP Act 2023 (India)"]},
+  "CN":{adequacy:"no",risk:"high",notes:"No adequacy. PIPL/DSL/NIL grant broad state access; CAC outbound transfer security assessment required for exports out of China.",sources:["PIPL 2021","DSL 2021","CAC Measures 2022/2023"]},
+  "RU":{adequacy:"no",risk:"high",notes:"No adequacy. Data localization (Federal Law 242-FZ); SORM surveillance.",sources:["Federal Law 152-FZ; 242-FZ"]},
+  "BR":{adequacy:"no",risk:"medium",notes:"No adequacy (under assessment). LGPD broadly aligned with GDPR.",sources:["LGPD (Law 13.709/2018)"]},
+  "MX":{adequacy:"no",risk:"medium",notes:"No adequacy. LFPDPPP applies.",sources:["LFPDPPP 2010"]},
+  "ZA":{adequacy:"no",risk:"medium",notes:"No adequacy. POPIA applies.",sources:["POPIA 2013"]},
+  "AU":{adequacy:"no",risk:"medium",notes:"No adequacy. Privacy Act 1988; Assistance and Access Act 2018 raises surveillance concerns.",sources:["Privacy Act 1988","Assistance and Access Act 2018"]},
+  "SG":{adequacy:"no",risk:"medium",notes:"No adequacy. PDPA; broadly aligned but limited derogations.",sources:["PDPA 2012 (SG)"]},
+  "AE":{adequacy:"no",risk:"medium-high",notes:"No adequacy. Federal Decree-Law No. 45 of 2021; DIFC has its own DP Law 5/2020.",sources:["UAE Federal Decree-Law 45/2021","DIFC DP Law 5/2020"]},
+  "TR":{adequacy:"no",risk:"medium-high",notes:"No adequacy. KVKK applies; restrictive cross-border transfer regime.",sources:["KVKK Law No. 6698"]},
+  "TH":{adequacy:"no",risk:"medium",notes:"No adequacy. PDPA (Thailand) in force 2022.",sources:["PDPA Thailand 2019/2022"]},
+  "VN":{adequacy:"no",risk:"medium-high",notes:"No adequacy. Decree 13/2023 imposes localization and consent rules.",sources:["Decree 13/2023/ND-CP"]},
+  "ID":{adequacy:"no",risk:"medium",notes:"No adequacy. PDP Law (UU 27/2022) in force; transfer requires adequacy or safeguards.",sources:["UU 27/2022 (Indonesia)"]},
+  "OTHER":{adequacy:"no",risk:"unknown",notes:"Country not in built-in database — perform a manual TIA with up-to-date sources.",sources:["EDPB Recommendations 01/2020"]}
+};
+let STEP = 1;
+const STATE = {
+  meta:{id:null,type:"transfer",ref_no:"",owner:"",counterparty:"",status:"draft",saved_at:null},
+  mapping:{exporter:"",importer:"",controller_role:"controller",importer_role:"processor",purpose:"",categories_data:"",categories_subjects:"",volume:"med",special_categories:false,frequency:"continuous"},
+  mechanism:{type:"sccs",module:"c2p",dpf_certified:false,bcr_doc:"",derogation_basis:"none",justification:""},
+  destination:{country:"US",onward_transfer:false,onward_destinations:""},
+  govaccess:{laws_disclosed:false,disclosed_orders_last_year:0,gag_orders:false,public_authority_request_process:false,challenge_mechanism:false,encryption_keys_held_by_importer:true},
+  supp:{tech_encryption:false,tech_pseudonymisation:false,tech_split_processing:false,tech_zero_knowledge:false,contractual_transparency:false,contractual_audit:false,contractual_challenge:false,organizational_minimisation:false,organizational_training:false},
+  notes:""
+};
+function $(id){return document.getElementById(id)}
+function t(){return I18N[localStorage.getItem("dpia_lang")||"en"]||I18N.en;}
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function cb(id,checked,label){return `<label><input type="checkbox" id="${id}" ${checked?'checked':''}/> ${label}</label>`;}
+function countryOptions(sel){
+  return Object.keys(COUNTRY_DB).map(c=>`<option value="${c}" ${sel===c?'selected':''}>${c}</option>`).join("");
+}
+function renderSteps(){
+  const s=t().steps;
+  $("steps").innerHTML=s.map((label,i)=>`<button data-step="${i+1}" class="${STEP===i+1?'active':''}">${i+1}. ${esc(label)}</button>`).join("");
+  [...$("steps").querySelectorAll("button")].forEach(b=>b.onclick=()=>go(parseInt(b.dataset.step,10)));
+}
+function go(n){
+  STEP=Math.max(1,Math.min(6,n));
+  renderSteps();
+  const body=$("stepBody");
+  if(STEP===1){
+    body.innerHTML=`<h2>1. Map the transfer (Step 1 of EDPB Recommendations 01/2020)</h2><div class="row">
+      <div class="col-4"><label>Reference no.</label><input id="ref_no" value="${esc(STATE.meta.ref_no)}"/></div>
+      <div class="col-4"><label>Owner</label><input id="owner" value="${esc(STATE.meta.owner)}"/></div>
+      <div class="col-4"><label>Counterparty</label><input id="counterparty" value="${esc(STATE.meta.counterparty)}"/></div>
+      <div class="col-6"><label>Data exporter</label><input id="exporter" value="${esc(STATE.mapping.exporter)}" placeholder="our entity"/></div>
+      <div class="col-6"><label>Data importer</label><input id="importer" value="${esc(STATE.mapping.importer)}" placeholder="recipient entity"/></div>
+      <div class="col-4"><label>Exporter role</label><select id="controller_role">
+        <option value="controller" ${STATE.mapping.controller_role==='controller'?'selected':''}>Controller</option>
+        <option value="processor" ${STATE.mapping.controller_role==='processor'?'selected':''}>Processor</option>
+        <option value="joint" ${STATE.mapping.controller_role==='joint'?'selected':''}>Joint controller</option>
+      </select></div>
+      <div class="col-4"><label>Importer role</label><select id="importer_role">
+        <option value="controller" ${STATE.mapping.importer_role==='controller'?'selected':''}>Controller</option>
+        <option value="processor" ${STATE.mapping.importer_role==='processor'?'selected':''}>Processor</option>
+        <option value="subprocessor" ${STATE.mapping.importer_role==='subprocessor'?'selected':''}>Sub-processor</option>
+      </select></div>
+      <div class="col-4"><label>Volume</label><select id="volume">
+        <option value="low" ${STATE.mapping.volume==='low'?'selected':''}>Low</option>
+        <option value="med" ${STATE.mapping.volume==='med'?'selected':''}>Medium</option>
+        <option value="high" ${STATE.mapping.volume==='high'?'selected':''}>High</option>
+      </select></div>
+      <div class="col-12"><label>Purpose</label><textarea id="purpose">${esc(STATE.mapping.purpose)}</textarea></div>
+      <div class="col-6"><label>Categories of data</label><input id="categories_data" value="${esc(STATE.mapping.categories_data)}"/></div>
+      <div class="col-6"><label>Categories of subjects</label><input id="categories_subjects" value="${esc(STATE.mapping.categories_subjects)}"/></div>
+      <div class="col-6">${cb("special_categories",STATE.mapping.special_categories,"Special categories / criminal data")}</div>
+      <div class="col-6"><label>Frequency</label><select id="frequency">
+        <option value="one_off" ${STATE.mapping.frequency==='one_off'?'selected':''}>One-off</option>
+        <option value="periodic" ${STATE.mapping.frequency==='periodic'?'selected':''}>Periodic</option>
+        <option value="continuous" ${STATE.mapping.frequency==='continuous'?'selected':''}>Continuous</option>
+      </select></div>
+    </div>`;
+  }
+  if(STEP===2){
+    body.innerHTML=`<h2>2. Choose a transfer tool (Art. 45–49 / EDPB Step 2)</h2><div class="row">
+      <div class="col-6"><label>Mechanism</label><select id="type">
+        <option value="adequacy" ${STATE.mechanism.type==='adequacy'?'selected':''}>Adequacy decision (Art. 45)</option>
+        <option value="sccs" ${STATE.mechanism.type==='sccs'?'selected':''}>SCCs (2021/914) (Art. 46)</option>
+        <option value="bcr" ${STATE.mechanism.type==='bcr'?'selected':''}>BCRs (Art. 47)</option>
+        <option value="dpf" ${STATE.mechanism.type==='dpf'?'selected':''}>EU-US Data Privacy Framework (Art. 45)</option>
+        <option value="derogation" ${STATE.mechanism.type==='derogation'?'selected':''}>Art. 49 derogation</option>
+        <option value="code_cert" ${STATE.mechanism.type==='code_cert'?'selected':''}>Code of conduct / certification (Art. 46(2)(e)–(f))</option>
+      </select></div>
+      <div class="col-6"><label>SCCs module</label><select id="module">
+        <option value="c2c" ${STATE.mechanism.module==='c2c'?'selected':''}>Module 1: C → C</option>
+        <option value="c2p" ${STATE.mechanism.module==='c2p'?'selected':''}>Module 2: C → P</option>
+        <option value="p2p" ${STATE.mechanism.module==='p2p'?'selected':''}>Module 3: P → P</option>
+        <option value="p2c" ${STATE.mechanism.module==='p2c'?'selected':''}>Module 4: P → C</option>
+      </select></div>
+      <div class="col-6">${cb("dpf_certified",STATE.mechanism.dpf_certified,"Importer is currently DPF-certified for relevant data types")}</div>
+      <div class="col-6"><label>BCR doc reference</label><input id="bcr_doc" value="${esc(STATE.mechanism.bcr_doc)}" placeholder="approval ID"/></div>
+      <div class="col-6"><label>Derogation basis (if Art. 49)</label><select id="derogation_basis">
+        <option value="none" ${STATE.mechanism.derogation_basis==='none'?'selected':''}>N/A</option>
+        <option value="explicit_consent" ${STATE.mechanism.derogation_basis==='explicit_consent'?'selected':''}>Explicit consent (49(1)(a))</option>
+        <option value="contract_necessity" ${STATE.mechanism.derogation_basis==='contract_necessity'?'selected':''}>Necessary for contract (49(1)(b))</option>
+        <option value="public_interest" ${STATE.mechanism.derogation_basis==='public_interest'?'selected':''}>Public interest (49(1)(d))</option>
+        <option value="legal_claims" ${STATE.mechanism.derogation_basis==='legal_claims'?'selected':''}>Legal claims (49(1)(e))</option>
+        <option value="vital_interest" ${STATE.mechanism.derogation_basis==='vital_interest'?'selected':''}>Vital interest (49(1)(f))</option>
+        <option value="compelling_legitimate" ${STATE.mechanism.derogation_basis==='compelling_legitimate'?'selected':''}>Compelling legitimate interest (49(1) 2nd subpara)</option>
+      </select></div>
+      <div class="col-12"><label>Justification</label><textarea id="justification">${esc(STATE.mechanism.justification)}</textarea></div>
+    </div>`;
+  }
+  if(STEP===3){
+    const c = COUNTRY_DB[STATE.destination.country] || COUNTRY_DB.OTHER;
+    body.innerHTML=`<h2>3. Destination country (EDPB Step 3)</h2><div class="row">
+      <div class="col-6"><label>Destination</label><select id="country">${countryOptions(STATE.destination.country)}</select></div>
+      <div class="col-6">${cb("onward_transfer",STATE.destination.onward_transfer,"Importer may onward-transfer to other third countries")}</div>
+      <div class="col-12"><label>Onward destinations</label><input id="onward_destinations" value="${esc(STATE.destination.onward_destinations)}"/></div>
+      <div class="col-12">
+        <div class="country-card">
+          <h4>${esc(STATE.destination.country)} — risk: ${esc(c.risk)} · adequacy: ${esc(c.adequacy)}</h4>
+          <div>${esc(c.notes)}</div>
+          <div class="src">Sources: ${c.sources.map(esc).join(" · ")}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  if(STEP===4){
+    body.innerHTML=`<h2>4. Government access &amp; laws (EDPB Step 3 continued)</h2><div class="checks">
+      ${cb("laws_disclosed",STATE.govaccess.laws_disclosed,"Importer has disclosed applicable surveillance laws (e.g., FISA 702, IPA 2016, PIPL/DSL)")}
+      ${cb("gag_orders",STATE.govaccess.gag_orders,"Importer is subject to gag orders preventing disclosure")}
+      ${cb("public_authority_request_process",STATE.govaccess.public_authority_request_process,"Documented process to handle public-authority requests")}
+      ${cb("challenge_mechanism",STATE.govaccess.challenge_mechanism,"Mechanism to challenge unlawful access requests")}
+      ${cb("encryption_keys_held_by_importer",STATE.govaccess.encryption_keys_held_by_importer,"Importer holds the encryption keys (vs. exporter / third-party)")}
+    </div>
+    <div class="row"><div class="col-6"><label>Disclosed access requests in last 12 months</label><input id="disclosed_orders_last_year" type="number" value="${STATE.govaccess.disclosed_orders_last_year}"/></div></div>`;
+  }
+  if(STEP===5){
+    body.innerHTML=`<h2>5. Supplementary measures (EDPB Step 4)</h2>
+    <h3>Technical</h3><div class="checks">
+      ${cb("tech_encryption",STATE.supp.tech_encryption,"Strong encryption in transit + at rest, with keys outside the third country")}
+      ${cb("tech_pseudonymisation",STATE.supp.tech_pseudonymisation,"Pseudonymisation — re-identification keys held in EU only")}
+      ${cb("tech_split_processing",STATE.supp.tech_split_processing,"Split processing across multiple jurisdictions")}
+      ${cb("tech_zero_knowledge",STATE.supp.tech_zero_knowledge,"Zero-knowledge / end-to-end encryption architecture")}
+    </div>
+    <h3>Contractual</h3><div class="checks">
+      ${cb("contractual_transparency",STATE.supp.contractual_transparency,"Transparency obligations: notify of access requests, transparency reports")}
+      ${cb("contractual_audit",STATE.supp.contractual_audit,"Audit/inspection right + warrant canary")}
+      ${cb("contractual_challenge",STATE.supp.contractual_challenge,"Obligation to challenge disproportionate requests")}
+    </div>
+    <h3>Organizational</h3><div class="checks">
+      ${cb("organizational_minimisation",STATE.supp.organizational_minimisation,"Data minimisation / strict access controls")}
+      ${cb("organizational_training",STATE.supp.organizational_training,"Documented training on third-country surveillance risks")}
+    </div>
+    <div class="row"><div class="col-12"><label>Notes</label><textarea id="notes">${esc(STATE.notes)}</textarea></div></div>`;
+  }
+  if(STEP===6){
+    body.innerHTML=`<h2>6. Review &amp; Assess</h2>
+      <p>Click <b>Assess</b> to run the Schrems II TIA logic.</p>
+      <div class="kv">
+        <div>Ref</div><div>${esc(STATE.meta.ref_no)||"—"}</div>
+        <div>Exporter → Importer</div><div>${esc(STATE.mapping.exporter)||"—"} → ${esc(STATE.mapping.importer)||"—"}</div>
+        <div>Destination</div><div>${esc(STATE.destination.country)} (${esc((COUNTRY_DB[STATE.destination.country]||COUNTRY_DB.OTHER).risk)})</div>
+        <div>Mechanism</div><div>${esc(STATE.mechanism.type)} ${STATE.mechanism.type==='sccs'?'· '+esc(STATE.mechanism.module):''}</div>
+        <div>Special cats?</div><div>${STATE.mapping.special_categories?"Yes":"No"}</div>
+      </div>`;
+  }
+}
+function collect(){
+  const v=id=>{const el=$(id);if(!el)return undefined;return el.type==='checkbox'?el.checked:el.value;};
+  if(STEP===1){
+    STATE.meta.ref_no=v("ref_no")??STATE.meta.ref_no;
+    STATE.meta.owner=v("owner")??STATE.meta.owner;
+    STATE.meta.counterparty=v("counterparty")??STATE.meta.counterparty;
+    STATE.mapping.exporter=v("exporter")??STATE.mapping.exporter;
+    STATE.mapping.importer=v("importer")??STATE.mapping.importer;
+    STATE.mapping.controller_role=v("controller_role")??STATE.mapping.controller_role;
+    STATE.mapping.importer_role=v("importer_role")??STATE.mapping.importer_role;
+    STATE.mapping.volume=v("volume")??STATE.mapping.volume;
+    STATE.mapping.purpose=v("purpose")??STATE.mapping.purpose;
+    STATE.mapping.categories_data=v("categories_data")??STATE.mapping.categories_data;
+    STATE.mapping.categories_subjects=v("categories_subjects")??STATE.mapping.categories_subjects;
+    STATE.mapping.special_categories=!!v("special_categories");
+    STATE.mapping.frequency=v("frequency")??STATE.mapping.frequency;
+  }
+  if(STEP===2){
+    STATE.mechanism.type=v("type")??STATE.mechanism.type;
+    STATE.mechanism.module=v("module")??STATE.mechanism.module;
+    STATE.mechanism.dpf_certified=!!v("dpf_certified");
+    STATE.mechanism.bcr_doc=v("bcr_doc")??STATE.mechanism.bcr_doc;
+    STATE.mechanism.derogation_basis=v("derogation_basis")??STATE.mechanism.derogation_basis;
+    STATE.mechanism.justification=v("justification")??STATE.mechanism.justification;
+  }
+  if(STEP===3){
+    STATE.destination.country=v("country")??STATE.destination.country;
+    STATE.destination.onward_transfer=!!v("onward_transfer");
+    STATE.destination.onward_destinations=v("onward_destinations")??STATE.destination.onward_destinations;
+  }
+  if(STEP===4){
+    STATE.govaccess.laws_disclosed=!!v("laws_disclosed");
+    STATE.govaccess.gag_orders=!!v("gag_orders");
+    STATE.govaccess.public_authority_request_process=!!v("public_authority_request_process");
+    STATE.govaccess.challenge_mechanism=!!v("challenge_mechanism");
+    STATE.govaccess.encryption_keys_held_by_importer=!!v("encryption_keys_held_by_importer");
+    STATE.govaccess.disclosed_orders_last_year=parseInt(v("disclosed_orders_last_year")||"0",10);
+  }
+  if(STEP===5){
+    ["tech_encryption","tech_pseudonymisation","tech_split_processing","tech_zero_knowledge","contractual_transparency","contractual_audit","contractual_challenge","organizational_minimisation","organizational_training"].forEach(k=>{STATE.supp[k]=!!v(k);});
+    STATE.notes=v("notes")??STATE.notes;
+  }
+}
+function assess(){
+  collect();
+  const f=[],r=[];
+  const c = COUNTRY_DB[STATE.destination.country] || COUNTRY_DB.OTHER;
+  // Mechanism legality
+  if(STATE.mechanism.type==="adequacy" && c.adequacy!=="yes" && c.adequacy!=="native"){
+    f.push({level:"bad",msg:`Adequacy claimed but ${STATE.destination.country} has no current adequacy decision.`});
+    r.push("Switch to SCCs (2021/914) + TIA, or use BCR/DPF as applicable.");
+  }
+  if(STATE.mechanism.type==="dpf" && STATE.destination.country!=="US"){
+    f.push({level:"bad",msg:"DPF only applies to US importers."});
+    r.push("Use SCCs or BCRs for non-US destinations.");
+  }
+  if(STATE.mechanism.type==="dpf" && STATE.destination.country==="US" && !STATE.mechanism.dpf_certified){
+    f.push({level:"bad",msg:"Reliance on DPF but importer is not DPF-certified for the relevant data."});
+    r.push("Confirm active certification on the DPF list (covered data categories) or switch to SCCs.");
+  }
+  if(STATE.mechanism.type==="derogation"){
+    f.push({level:"warn",msg:"Reliance on Art. 49 derogation — narrow & exceptional."});
+    if(STATE.mapping.frequency==="continuous"){f.push({level:"bad",msg:"Continuous transfer under Art. 49 derogation is generally not appropriate (EDPB Guidelines 2/2018)."});r.push("Adopt a transfer tool (SCCs/BCRs) rather than derogation for continuous flows.");}
+    if(STATE.mechanism.derogation_basis==="none"){f.push({level:"bad",msg:"Derogation selected but no Art. 49 basis chosen."});r.push("Identify the specific Art. 49(1) sub-paragraph relied upon and document necessity.");}
+  }
+  // Country risk modulation
+  if(c.risk==="high" || c.risk==="medium-high"){
+    f.push({level:c.risk==="high"?"bad":"warn",msg:`Destination country risk is ${c.risk}: ${c.notes}`});
+    r.push("Document local-law assessment, likelihood of public-authority access, and effective remedies.");
+  }
+  if(c.risk==="unknown"){
+    f.push({level:"warn",msg:"Destination country is not in the built-in database."});
+    r.push("Perform manual TIA with current legal sources and document the result.");
+  }
+  if(STATE.destination.onward_transfer){
+    f.push({level:"warn",msg:"Onward transfers are permitted or possible."});
+    r.push("Require onward-transfer flow-down safeguards, sub-processor notice, and destination-specific TIA.");
+  }
+  // Government access
+  if(!STATE.govaccess.laws_disclosed && (c.risk==="high" || c.risk==="medium-high" || STATE.mechanism.type==="sccs")){
+    f.push({level:"bad",msg:"Importer has not disclosed applicable government-access laws."});
+    r.push("Require importer legal memo or transfer questionnaire covering surveillance laws and access-request history.");
+  }
+  if(STATE.govaccess.gag_orders){
+    f.push({level:"bad",msg:"Importer may be subject to gag orders preventing access-request transparency."});
+    r.push("Add warrant-canary/transparency reporting where lawful and require best-efforts notice.");
+  }
+  if(!STATE.govaccess.public_authority_request_process){
+    f.push({level:"warn",msg:"No documented process for public-authority access requests."});
+    r.push("Add process to review legality, minimise disclosure, notify exporter where lawful, and keep records.");
+  }
+  if(!STATE.govaccess.challenge_mechanism && (c.risk==="high" || c.risk==="medium-high")){
+    f.push({level:"bad",msg:"No mechanism to challenge disproportionate or unlawful access requests."});
+    r.push("Require importer to challenge requests and exhaust available remedies where reasonable.");
+  }
+  // Supplementary measures
+  const techStrong = STATE.supp.tech_zero_knowledge || STATE.supp.tech_pseudonymisation || (!STATE.govaccess.encryption_keys_held_by_importer && STATE.supp.tech_encryption);
+  if((c.risk==="high" || c.risk==="medium-high") && !techStrong){
+    f.push({level:"bad",msg:"High-risk destination without strong technical supplementary measures."});
+    r.push("Use zero-knowledge encryption, EU-held keys, or robust pseudonymisation before transfer.");
+  }
+  if(!STATE.supp.contractual_transparency && STATE.mechanism.type==="sccs"){
+    f.push({level:"warn",msg:"SCCs used without explicit transparency obligations."});
+    r.push("Add transparency reporting and immediate notice of legally binding access requests where permitted.");
+  }
+  if(!STATE.supp.contractual_challenge && (c.risk==="medium-high" || c.risk==="high")){
+    f.push({level:"warn",msg:"No contractual obligation to challenge public-authority requests."});
+    r.push("Add obligation to challenge overbroad or unlawful requests.");
+  }
+  if(!STATE.supp.organizational_minimisation){
+    f.push({level:"warn",msg:"Data minimisation / access controls not confirmed."});
+    r.push("Minimise transferred data and restrict importer access by role and need-to-know.");
+  }
+  if(STATE.mapping.special_categories && !techStrong){
+    f.push({level:"bad",msg:"Special-category data transfer lacks strong technical protection."});
+    r.push("Use EU-held encryption keys or pseudonymisation before transferring special-category data.");
+  }
+  const bad=f.filter(x=>x.level==="bad").length;
+  const warn=f.filter(x=>x.level==="warn").length;
+  let verdict = "Permitted with documentation";
+  let verdictClass = "ok";
+  if(bad>=3){verdict="Do not transfer until remediated"; verdictClass="bad";}
+  else if(bad>0){verdict="Use SCCs + TIA + supplementary measures"; verdictClass="warn";}
+  else if(STATE.mechanism.type==="adequacy" || STATE.mechanism.type==="dpf" || STATE.mechanism.type==="bcr"){verdict="Permitted under selected mechanism"; verdictClass="ok";}
+  else if(warn>0){verdict="Permitted with TIA actions"; verdictClass="warn";}
+  $("resultCard").style.display="block";
+  $("resultSummary").innerHTML=`<div class="kv">
+    <div>Verdict</div><div><span class="pill ${verdictClass}">${esc(verdict)}</span></div>
+    <div>Red flags</div><div>${bad}</div>
+    <div>Warnings</div><div>${warn}</div>
+    <div>Country risk</div><div>${esc(c.risk)} · adequacy: ${esc(c.adequacy)}</div></div>`;
+  $("findings").innerHTML=f.length?f.map(x=>`<li class="${x.level}">${esc(x.msg)}</li>`).join(""):"<li class='ok'>No issues detected.</li>";
+  $("redlines").innerHTML=r.length?r.map(x=>`<li>${esc(x)}</li>`).join(""):"<li>None.</li>";
+  $("countryProfile").innerHTML=`<div class="country-card"><h4>${esc(STATE.destination.country)}</h4><div>${esc(c.notes)}</div><div class="src">Sources: ${c.sources.map(esc).join(" · ")}</div></div>`;
+  STATE._assessment={verdict,verdictClass,bad,warn,findings:f,redlines:r,country:c,at:new Date().toISOString()};
+}
+/* === END PART 2 === */
+function registry(){
+  try{return JSON.parse(localStorage.getItem("transfer_registry_v1")||"{}");}catch(e){return {};}
+}
+function writeRegistry(reg){localStorage.setItem("transfer_registry_v1",JSON.stringify(reg));}
+function saveLocal(){
+  collect();
+  if(!STATE.meta.id) STATE.meta.id="tr_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,6);
+  STATE.meta.saved_at=new Date().toISOString();
+  const reg=registry();
+  reg[STATE.meta.id]=STATE;
+  writeRegistry(reg);
+  alert("Saved. ID: "+STATE.meta.id);
+}
+function loadLocal(){
+  const id=prompt("Enter Transfer record ID to load:");
+  if(!id) return;
+  const reg=registry();
+  if(!reg[id]){alert("Not found.");return;}
+  Object.assign(STATE,reg[id]);
+  go(1);
+}
+function buildReportHTML(){
+  const a=STATE._assessment||{band:"—",bad:0,warn:0,findings:[],redlines:[]};
+  const c=COUNTRY_DB[STATE.destination.country]||COUNTRY_DB.OTHER;
+  const row=(k,v)=>"<tr><td style=\"color:#666;padding:4px 8px\">"+esc(k)+"</td><td style=\"padding:4px 8px\">"+esc(v)+"</td></tr>";
+  const chk=(k,v)=>"<tr><td style=\"color:#666;padding:4px 8px\">"+esc(k)+"</td><td style=\"padding:4px 8px\">"+(v?"&#10003;":"&#10007;")+"</td></tr>";
+  const head="<!doctype html><html><head><meta charset=\"utf-8\"><title>TIA "+esc(STATE.meta.ref_no)+"</title><style>body{font:13px/1.5 system-ui;margin:24px;color:#111}h1{font-size:18px}h2{font-size:14px;margin-top:18px}table{border-collapse:collapse;width:100%}td{vertical-align:top;border-bottom:1px solid #eee}.pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd}.bad{background:#fee;color:#900}.warn{background:#ffe;color:#960}.ok{background:#efe;color:#060}.src{font-size:11px;color:#777}</style></head><body>";
+  const body=
+    "<h1>Transfer Impact Assessment &mdash; "+esc(STATE.meta.ref_no||"(no ref)")+"</h1>"+
+    "<p>Saved: "+esc(STATE.meta.saved_at||"—")+" &middot; Owner: "+esc(STATE.meta.owner)+" &middot; Counterparty: "+esc(STATE.meta.counterparty)+"</p>"+
+    "<h2>Mapping</h2><table>"+
+      row("Exporter",STATE.mapping.exporter)+row("Importer",STATE.mapping.importer)+
+      row("Exporter role",STATE.mapping.controller_role)+row("Importer role",STATE.mapping.importer_role)+
+      row("Volume",STATE.mapping.volume)+row("Frequency",STATE.mapping.frequency)+
+      row("Purpose",STATE.mapping.purpose)+row("Categories of data",STATE.mapping.categories_data)+
+      row("Categories of subjects",STATE.mapping.categories_subjects)+chk("Special categories",STATE.mapping.special_categories)+
+    "</table>"+
+    "<h2>Mechanism</h2><table>"+
+      row("Type",STATE.mechanism.type)+row("SCCs module",STATE.mechanism.module)+
+      chk("DPF certified",STATE.mechanism.dpf_certified)+row("BCR doc",STATE.mechanism.bcr_doc)+
+      row("Derogation basis",STATE.mechanism.derogation_basis)+row("Justification",STATE.mechanism.justification)+
+    "</table>"+
+    "<h2>Destination</h2><table>"+
+      row("Country",STATE.destination.country)+row("Adequacy",c.adequacy)+row("Country risk",c.risk)+row("Country notes",c.notes)+
+      row("Sources",c.sources.join(" · "))+
+      chk("Onward transfers",STATE.destination.onward_transfer)+row("Onward destinations",STATE.destination.onward_destinations)+
+    "</table>"+
+    "<h2>Government access</h2><table>"+
+      chk("Laws disclosed",STATE.govaccess.laws_disclosed)+chk("Gag orders",STATE.govaccess.gag_orders)+
+      chk("Request-handling process",STATE.govaccess.public_authority_request_process)+chk("Challenge mechanism",STATE.govaccess.challenge_mechanism)+
+      chk("Importer holds keys",STATE.govaccess.encryption_keys_held_by_importer)+row("Disclosed orders (12m)",STATE.govaccess.disclosed_orders_last_year)+
+    "</table>"+
+    "<h2>Supplementary measures</h2><table>"+
+      chk("Encryption (keys outside)",STATE.supp.tech_encryption)+chk("Pseudonymisation",STATE.supp.tech_pseudonymisation)+
+      chk("Split processing",STATE.supp.tech_split_processing)+chk("Zero-knowledge",STATE.supp.tech_zero_knowledge)+
+      chk("Transparency",STATE.supp.contractual_transparency)+chk("Audit / canary",STATE.supp.contractual_audit)+
+      chk("Challenge obligation",STATE.supp.contractual_challenge)+chk("Minimisation",STATE.supp.organizational_minimisation)+
+      chk("Training",STATE.supp.organizational_training)+
+    "</table>"+
+    "<h2>Assessment</h2>"+
+    "<p>Outcome: <span class=\"pill "+(a.bad>0?"bad":(a.warn>0?"warn":"ok"))+"\">"+esc(a.band)+"</span> &middot; Red flags: "+a.bad+" &middot; Warnings: "+a.warn+"</p>"+
+    "<h3>Findings</h3><ul>"+(a.findings.map(function(x){return "<li class=\""+x.level+"\">"+esc(x.msg)+"</li>";}).join("")||"<li>None.</li>")+"</ul>"+
+    "<h3>Recommended safeguards</h3><ul>"+(a.redlines.map(function(x){return "<li>"+esc(x)+"</li>";}).join("")||"<li>None.</li>")+"</ul>"+
+    "<p style=\"margin-top:24px;color:#888;font-size:11px\">Generated by GDPR Toolkit &mdash; Transfer Advisor. Not legal advice.</p>";
+  return head+body+"</body></html>";
+}
+function download(name,data,mime){
+  const blob=new Blob([data],{type:mime||"application/octet-stream"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);a.remove();},500);
+}
+function exportHTML(){
+  assess();
+  const html=buildReportHTML();
+  const fname="transfer_"+(STATE.meta.ref_no||"report").replace(/\W+/g,"_")+".html";
+  download(fname,html,"text/html");
+}
+function exportJSON(){
+  assess();
+  const payload={meta:STATE.meta,mapping:STATE.mapping,mechanism:STATE.mechanism,destination:STATE.destination,govaccess:STATE.govaccess,supp:STATE.supp,notes:STATE.notes,assessment:STATE._assessment};
+  const fname="transfer_"+(STATE.meta.ref_no||"report").replace(/\W+/g,"_")+".json";
+  download(fname,JSON.stringify(payload,null,2),"application/json");
+}
+function renderCountryProfile(){
+  const c=COUNTRY_DB[STATE.destination.country]||COUNTRY_DB.OTHER;
+  $("countryProfile").innerHTML="<div class=\"country-card\"><h4>"+esc(STATE.destination.country)+" &mdash; risk: "+esc(c.risk)+" &middot; adequacy: "+esc(c.adequacy)+"</h4><div>"+esc(c.notes)+"</div><div class=\"src\">Sources: "+c.sources.map(esc).join(" &middot; ")+"</div></div>";
+}
+(function boot(){
+  const lang=localStorage.getItem("dpia_lang")||"en";
+  $("lang").value=lang;
+  $("lang").onchange=function(){localStorage.setItem("dpia_lang",$("lang").value);renderSteps();go(STEP);};
+  $("btnPrev").onclick=function(){collect();go(STEP-1);};
+  $("btnNext").onclick=function(){collect();go(STEP+1);};
+  $("btnAssess").onclick=function(){assess();renderCountryProfile();};
+  $("btnSave").onclick=saveLocal;
+  $("btnLoad").onclick=loadLocal;
+  $("btnHTML").onclick=exportHTML;
+  $("btnJSON").onclick=exportJSON;
+  $("btnPrint").onclick=function(){window.print();};
+  const params=new URLSearchParams(location.search);
+  const id=params.get("id");
+  if(id){
+    const reg=registry();
+    if(reg[id]){Object.assign(STATE,reg[id]);}
+  }
+  if(params.get("new")==="1"){STATE.meta.id=null;STATE.meta.saved_at=null;}
+  renderSteps();
+  go(1);
+})();
+</script>
+</body>
+</html>

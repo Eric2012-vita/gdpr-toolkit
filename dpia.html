@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DPIA (Art. 35) — GDPR Toolkit</title>
+<style>
+:root{--bg:#0b1020;--panel:#121933;--ink:#e8ecf7;--muted:#9aa3c0;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--accent:#6366f1;--line:#26305a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:#0a0f24;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;flex:1}
+header a,header select,header button{color:var(--ink);background:#1a2347;border:1px solid var(--line);border-radius:8px;padding:6px 10px;text-decoration:none;font-size:13px;cursor:pointer}
+header a:hover,header button:hover{border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-12{grid-column:span 12}
+@media (max-width:780px){.col-6,.col-4,.col-3{grid-column:span 12}}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;background:#0e1530;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font:inherit}
+textarea{min-height:80px;resize:vertical}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line)}
+.pill.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
+.pill.warn{background:rgba(245,158,11,.12);color:#fcd34d;border-color:#78350f}
+.pill.bad{background:rgba(239,68,68,.12);color:#fca5a5;border-color:#7f1d1d}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.steps button{background:#0e1530;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:999px;cursor:pointer;font-size:12px}
+.steps button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600}
+.btn.alt{background:#1a2347;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.findings li{margin:6px 0}
+.findings .bad{color:#fca5a5}.findings .warn{color:#fcd34d}.findings .ok{color:#86efac}
+small.hint{color:var(--muted)}
+h2{font-size:15px;margin:0 0 8px 0}
+h3{font-size:13px;margin:14px 0 6px 0;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kv{display:grid;grid-template-columns:200px 1fr;gap:6px 12px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+.checks label{display:flex;align-items:flex-start;gap:8px;color:var(--ink);font-size:13px;margin:6px 0}
+.checks label input{width:auto;margin-top:3px}
+.risk-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.risk-tbl th,.risk-tbl td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.risk-tbl th{background:#0e1530;color:var(--muted);font-weight:500}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+.tag{display:inline-block;background:#1a2347;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:11px;color:var(--muted);margin-right:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>DPIA (Art. 35) <small class="hint">· GDPR Toolkit</small></h1>
+  <a href="dashboard.html">← Dashboard</a>
+  <a href="dpa.html">DPA</a>
+  <a href="transfer.html">Transfer</a>
+  <a href="nda.html">NDA</a>
+  <a href="contract.html">Contract</a>
+  <a href="breach.html">Breach</a>
+  <select id="lang" aria-label="Language">
+    <option value="en">EN</option><option value="fr">FR</option><option value="de">DE</option><option value="it">IT</option>
+  </select>
+</header>
+<main>
+  <div class="card">
+    <div class="steps" id="steps"></div>
+    <div id="stepBody"></div>
+    <div class="actions">
+      <button class="btn alt" id="btnPrev">← Prev</button>
+      <button class="btn" id="btnNext">Next →</button>
+      <button class="btn alt" id="btnTrigger">Check Trigger</button>
+      <button class="btn alt" id="btnAssess">Assess</button>
+      <button class="btn alt" id="btnSave">Save</button>
+      <button class="btn alt" id="btnLoad">Load</button>
+      <button class="btn alt" id="btnHTML">Export HTML</button>
+      <button class="btn alt" id="btnJSON">Export JSON</button>
+      <button class="btn alt" id="btnPrint">Print</button>
+    </div>
+  </div>
+  <div class="card" id="triggerCard" style="display:none">
+    <h2>Trigger Analysis (Art. 35(3) + EDPB WP 248)</h2>
+    <div id="triggerSummary"></div>
+    <ul class="findings" id="triggerList"></ul>
+  </div>
+  <div class="card" id="resultCard" style="display:none">
+    <h2>DPIA Result</h2>
+    <div id="resultSummary"></div>
+    <h3>Findings</h3>
+    <ul class="findings" id="findings"></ul>
+    <h3>Recommended Mitigations</h3>
+    <ul class="findings" id="redlines"></ul>
+    <h3>AI Act Module</h3>
+    <div id="aiActSummary"></div>
+  </div>
+</main>
+<script>
+/* === END PART 1 === */
+const I18N = {
+  en:{steps:["Scope","Lawful basis","Data flow","Necessity","Rights & safeguards","Risk register","Residual & decision","AI Act","Review"]},
+  fr:{steps:["Périmètre","Base légale","Flux","Nécessité","Droits & garanties","Risques","Résiduel","IA Act","Revue"]},
+  de:{steps:["Umfang","Rechtsgrundlage","Datenfluss","Erforderlichkeit","Rechte & Maßnahmen","Risikoregister","Restrisiko","KI-VO","Prüfung"]},
+  it:{steps:["Ambito","Base giuridica","Flusso","Necessità","Diritti & misure","Rischi","Residuo","Reg. IA","Revisione"]}
+};
+let STEP = 1;
+const STATE = {
+  meta:{id:null,type:"dpia",ref_no:"",owner:"",dpo:"",status:"draft",saved_at:null},
+  scope:{project:"",description:"",systems:"",lifecycle_stage:"design",pia_done_before:false,prior_ref:""},
+  lawful:{purpose:"",legal_basis:"contract",legal_basis_other:"",legitimate_interest_test:false,special_category_basis:"none",public_interest_law:"",retention_months:24,retention_rule:""},
+  flow:{categories_data:"",categories_subjects:"",sources:"",recipients:"",cross_border:false,destinations:"",transfer_mechanism:"none",dpa_refs:"",transfer_refs:""},
+  necessity:{purpose_specified:false,minimisation:false,accuracy:false,storage_limit:false,less_intrusive_considered:false,alternatives:"",justification:""},
+  rights:{notice_layered:false,access_request_path:false,erasure_path:false,portability_path:false,objection_path:false,automated_decisions:false,ad_safeguards:"",dpo_involved:false,consultation_subjects:false,consultation_method:""},
+  risks:[
+    {id:"r1",category:"confidentiality",description:"Unauthorized access",likelihood:2,severity:3,mitigations:""},
+    {id:"r2",category:"integrity",description:"Data corruption / unauthorized modification",likelihood:1,severity:3,mitigations:""},
+    {id:"r3",category:"availability",description:"Loss of access / availability",likelihood:1,severity:2,mitigations:""}
+  ],
+  residual:{decision:"proceed",dpo_opinion:"",authority_consultation:false,authority_ref:"",signed_off_by:"",signed_off_at:""},
+  m9:{uses_ai:false,ai_role:"deployer",ai_purpose:"",risk_class:"limited",foundation_model:false,gpai_provider:false,human_oversight:false,logging:false,bias_testing:false,transparency_user:false,data_governance:false,robustness_tested:false,conformity_assessment:"none",fundamental_rights_impact:false,fria_done:false},
+  notes:""
+};
+function $(id){return document.getElementById(id)}
+function t(){return I18N[localStorage.getItem("dpia_lang")||"en"]||I18N.en;}
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function cb(id,checked,label){return '<label><input type="checkbox" id="'+id+'" '+(checked?'checked':'')+'/> '+label+'</label>';}
+function renderSteps(){
+  const s=t().steps;
+  $("steps").innerHTML=s.map((label,i)=>'<button data-step="'+(i+1)+'" class="'+(STEP===i+1?'active':'')+'">'+(i+1)+'. '+esc(label)+'</button>').join("");
+  [...$("steps").querySelectorAll("button")].forEach(b=>b.onclick=()=>go(parseInt(b.dataset.step,10)));
+}
+function go(n){
+  STEP=Math.max(1,Math.min(9,n));
+  renderSteps();
+  const body=$("stepBody");
+  if(STEP===1){
+    body.innerHTML=
+      '<h2>1. Project scope</h2><div class="row">'+
+      '<div class="col-4"><label>Reference no.</label><input id="ref_no" value="'+esc(STATE.meta.ref_no)+'"/></div>'+
+      '<div class="col-4"><label>Owner</label><input id="owner" value="'+esc(STATE.meta.owner)+'"/></div>'+
+      '<div class="col-4"><label>DPO</label><input id="dpo" value="'+esc(STATE.meta.dpo)+'"/></div>'+
+      '<div class="col-12"><label>Project name</label><input id="project" value="'+esc(STATE.scope.project)+'"/></div>'+
+      '<div class="col-12"><label>Description</label><textarea id="description">'+esc(STATE.scope.description)+'</textarea></div>'+
+      '<div class="col-6"><label>Systems involved</label><input id="systems" value="'+esc(STATE.scope.systems)+'" placeholder="CRM, ATS, data lake…"/></div>'+
+      '<div class="col-3"><label>Lifecycle stage</label><select id="lifecycle_stage">'+
+        '<option value="design" '+(STATE.scope.lifecycle_stage==='design'?'selected':'')+'>Design</option>'+
+        '<option value="build" '+(STATE.scope.lifecycle_stage==='build'?'selected':'')+'>Build</option>'+
+        '<option value="launch" '+(STATE.scope.lifecycle_stage==='launch'?'selected':'')+'>Launch</option>'+
+        '<option value="live" '+(STATE.scope.lifecycle_stage==='live'?'selected':'')+'>Live</option>'+
+        '<option value="change" '+(STATE.scope.lifecycle_stage==='change'?'selected':'')+'>Material change</option>'+
+      '</select></div>'+
+      '<div class="col-3">'+cb("pia_done_before",STATE.scope.pia_done_before,"Prior DPIA exists for this processing")+'</div>'+
+      '<div class="col-6"><label>Prior DPIA reference</label><input id="prior_ref" value="'+esc(STATE.scope.prior_ref)+'"/></div>'+
+      '</div>';
+  }
+  if(STEP===2){
+    body.innerHTML=
+      '<h2>2. Lawful basis &amp; purpose</h2><div class="row">'+
+      '<div class="col-12"><label>Purpose of processing</label><textarea id="purpose">'+esc(STATE.lawful.purpose)+'</textarea></div>'+
+      '<div class="col-6"><label>Art. 6 legal basis</label><select id="legal_basis">'+
+        '<option value="consent" '+(STATE.lawful.legal_basis==='consent'?'selected':'')+'>Consent (6(1)(a))</option>'+
+        '<option value="contract" '+(STATE.lawful.legal_basis==='contract'?'selected':'')+'>Contract (6(1)(b))</option>'+
+        '<option value="legal_obligation" '+(STATE.lawful.legal_basis==='legal_obligation'?'selected':'')+'>Legal obligation (6(1)(c))</option>'+
+        '<option value="vital_interest" '+(STATE.lawful.legal_basis==='vital_interest'?'selected':'')+'>Vital interests (6(1)(d))</option>'+
+        '<option value="public_task" '+(STATE.lawful.legal_basis==='public_task'?'selected':'')+'>Public task (6(1)(e))</option>'+
+        '<option value="legitimate_interest" '+(STATE.lawful.legal_basis==='legitimate_interest'?'selected':'')+'>Legitimate interests (6(1)(f))</option>'+
+      '</select></div>'+
+      '<div class="col-6"><label>Other / detail</label><input id="legal_basis_other" value="'+esc(STATE.lawful.legal_basis_other)+'"/></div>'+
+      '<div class="col-12">'+cb("legitimate_interest_test",STATE.lawful.legitimate_interest_test,"LIA (Legitimate Interests Assessment) completed if 6(1)(f) used")+'</div>'+
+      '<div class="col-6"><label>Special-category basis (Art. 9)</label><select id="special_category_basis">'+
+        '<option value="none" '+(STATE.lawful.special_category_basis==='none'?'selected':'')+'>N/A — no special categories</option>'+
+        '<option value="9_2_a" '+(STATE.lawful.special_category_basis==='9_2_a'?'selected':'')+'>9(2)(a) Explicit consent</option>'+
+        '<option value="9_2_b" '+(STATE.lawful.special_category_basis==='9_2_b'?'selected':'')+'>9(2)(b) Employment / social security</option>'+
+        '<option value="9_2_c" '+(STATE.lawful.special_category_basis==='9_2_c'?'selected':'')+'>9(2)(c) Vital interests</option>'+
+        '<option value="9_2_e" '+(STATE.lawful.special_category_basis==='9_2_e'?'selected':'')+'>9(2)(e) Manifestly public</option>'+
+        '<option value="9_2_f" '+(STATE.lawful.special_category_basis==='9_2_f'?'selected':'')+'>9(2)(f) Legal claims</option>'+
+        '<option value="9_2_g" '+(STATE.lawful.special_category_basis==='9_2_g'?'selected':'')+'>9(2)(g) Substantial public interest</option>'+
+        '<option value="9_2_h" '+(STATE.lawful.special_category_basis==='9_2_h'?'selected':'')+'>9(2)(h) Health / medical</option>'+
+        '<option value="9_2_i" '+(STATE.lawful.special_category_basis==='9_2_i'?'selected':'')+'>9(2)(i) Public health</option>'+
+        '<option value="9_2_j" '+(STATE.lawful.special_category_basis==='9_2_j'?'selected':'')+'>9(2)(j) Archiving / research</option>'+
+      '</select></div>'+
+      '<div class="col-6"><label>Public-interest law (if applicable)</label><input id="public_interest_law" value="'+esc(STATE.lawful.public_interest_law)+'"/></div>'+
+      '<div class="col-3"><label>Retention (months)</label><input id="retention_months" type="number" value="'+STATE.lawful.retention_months+'"/></div>'+
+      '<div class="col-9"><label>Retention rule / trigger</label><input id="retention_rule" value="'+esc(STATE.lawful.retention_rule)+'" placeholder="e.g. 6 years post contract end"/></div>'+
+      '</div>';
+  }
+  if(STEP===3){
+    body.innerHTML=
+      '<h2>3. Data flow mapping</h2><div class="row">'+
+      '<div class="col-6"><label>Categories of data</label><input id="categories_data" value="'+esc(STATE.flow.categories_data)+'"/></div>'+
+      '<div class="col-6"><label>Categories of subjects</label><input id="categories_subjects" value="'+esc(STATE.flow.categories_subjects)+'"/></div>'+
+      '<div class="col-6"><label>Sources of data</label><input id="sources" value="'+esc(STATE.flow.sources)+'"/></div>'+
+      '<div class="col-6"><label>Recipients</label><input id="recipients" value="'+esc(STATE.flow.recipients)+'"/></div>'+
+      '<div class="col-6">'+cb("cross_border",STATE.flow.cross_border,"Cross-border data flow")+'</div>'+
+      '<div class="col-6"><label>Destinations</label><input id="destinations" value="'+esc(STATE.flow.destinations)+'"/></div>'+
+      '<div class="col-6"><label>Transfer mechanism</label><select id="transfer_mechanism">'+
+        '<option value="none" '+(STATE.flow.transfer_mechanism==='none'?'selected':'')+'>None / N/A</option>'+
+        '<option value="adequacy" '+(STATE.flow.transfer_mechanism==='adequacy'?'selected':'')+'>Adequacy</option>'+
+        '<option value="sccs" '+(STATE.flow.transfer_mechanism==='sccs'?'selected':'')+'>SCCs</option>'+
+        '<option value="bcr" '+(STATE.flow.transfer_mechanism==='bcr'?'selected':'')+'>BCRs</option>'+
+        '<option value="dpf" '+(STATE.flow.transfer_mechanism==='dpf'?'selected':'')+'>DPF</option>'+
+        '<option value="derogation" '+(STATE.flow.transfer_mechanism==='derogation'?'selected':'')+'>Art. 49 derogation</option>'+
+      '</select></div>'+
+      '<div class="col-6"><label>Linked DPA record IDs</label><input id="dpa_refs" value="'+esc(STATE.flow.dpa_refs)+'" placeholder="dpa_xxx, dpa_yyy"/></div>'+
+      '<div class="col-6"><label>Linked Transfer TIA record IDs</label><input id="transfer_refs" value="'+esc(STATE.flow.transfer_refs)+'" placeholder="tr_xxx"/></div>'+
+      '</div>';
+  }
+  if(STEP===4){
+    body.innerHTML=
+      '<h2>4. Necessity &amp; proportionality (Art. 35(7)(b))</h2><div class="checks">'+
+      cb("purpose_specified",STATE.necessity.purpose_specified,"Purpose specified, explicit, legitimate")+
+      cb("minimisation",STATE.necessity.minimisation,"Data minimisation: only data necessary for the purpose is processed")+
+      cb("accuracy",STATE.necessity.accuracy,"Mechanism for keeping data accurate / up to date")+
+      cb("storage_limit",STATE.necessity.storage_limit,"Storage limited to what is necessary; deletion / anonymisation at end")+
+      cb("less_intrusive_considered",STATE.necessity.less_intrusive_considered,"Less intrusive alternatives considered and rejected with justification")+
+      '</div>'+
+      '<div class="row">'+
+      '<div class="col-12"><label>Alternatives considered</label><textarea id="alternatives">'+esc(STATE.necessity.alternatives)+'</textarea></div>'+
+      '<div class="col-12"><label>Justification for proceeding</label><textarea id="justification">'+esc(STATE.necessity.justification)+'</textarea></div>'+
+      '</div>';
+  }
+  if(STEP===5){
+    body.innerHTML=
+      '<h2>5. Data subject rights &amp; safeguards (Art. 35(7)(d))</h2><div class="checks">'+
+      cb("notice_layered",STATE.rights.notice_layered,"Layered privacy notice provided / available (Art. 13/14)")+
+      cb("access_request_path",STATE.rights.access_request_path,"Process to handle access requests (Art. 15)")+
+      cb("erasure_path",STATE.rights.erasure_path,"Process for erasure (Art. 17)")+
+      cb("portability_path",STATE.rights.portability_path,"Process for portability (Art. 20)")+
+      cb("objection_path",STATE.rights.objection_path,"Process for objection / restriction (Art. 18/21)")+
+      cb("automated_decisions",STATE.rights.automated_decisions,"Solely automated decisions producing legal/similar effects (Art. 22)")+
+      cb("dpo_involved",STATE.rights.dpo_involved,"DPO consulted (Art. 35(2))")+
+      cb("consultation_subjects",STATE.rights.consultation_subjects,"Views of data subjects sought where appropriate (Art. 35(9))")+
+      '</div>'+
+      '<div class="row">'+
+      '<div class="col-12"><label>Automated decision safeguards</label><textarea id="ad_safeguards">'+esc(STATE.rights.ad_safeguards)+'</textarea></div>'+
+      '<div class="col-12"><label>Consultation method &amp; outcome</label><textarea id="consultation_method">'+esc(STATE.rights.consultation_method)+'</textarea></div>'+
+      '</div>';
+  }
+}
+/* === END PART 2 === */
+function go_part2(){
+  // continuation of go(): steps 6-9
+  const body=$("stepBody");
+  if(STEP===6){
+    let rows="";
+    for(let i=0;i<STATE.risks.length;i++){
+      const r=STATE.risks[i];
+      rows+=
+        '<tr>'+
+          '<td><input id="risk_id_'+i+'" value="'+esc(r.id)+'" style="width:60px"/></td>'+
+          '<td><select id="risk_cat_'+i+'">'+
+            '<option value="confidentiality" '+(r.category==='confidentiality'?'selected':'')+'>Confidentiality</option>'+
+            '<option value="integrity" '+(r.category==='integrity'?'selected':'')+'>Integrity</option>'+
+            '<option value="availability" '+(r.category==='availability'?'selected':'')+'>Availability</option>'+
+            '<option value="rights" '+(r.category==='rights'?'selected':'')+'>Rights impact</option>'+
+            '<option value="discrimination" '+(r.category==='discrimination'?'selected':'')+'>Discrimination</option>'+
+            '<option value="financial" '+(r.category==='financial'?'selected':'')+'>Financial loss</option>'+
+          '</select></td>'+
+          '<td><input id="risk_desc_'+i+'" value="'+esc(r.description)+'" style="width:280px"/></td>'+
+          '<td><select id="risk_lik_'+i+'">'+
+            '<option value="1" '+(r.likelihood==1?'selected':'')+'>1 Rare</option>'+
+            '<option value="2" '+(r.likelihood==2?'selected':'')+'>2 Unlikely</option>'+
+            '<option value="3" '+(r.likelihood==3?'selected':'')+'>3 Possible</option>'+
+            '<option value="4" '+(r.likelihood==4?'selected':'')+'>4 Likely</option>'+
+            '<option value="5" '+(r.likelihood==5?'selected':'')+'>5 Almost certain</option>'+
+          '</select></td>'+
+          '<td><select id="risk_sev_'+i+'">'+
+            '<option value="1" '+(r.severity==1?'selected':'')+'>1 Negligible</option>'+
+            '<option value="2" '+(r.severity==2?'selected':'')+'>2 Limited</option>'+
+            '<option value="3" '+(r.severity==3?'selected':'')+'>3 Significant</option>'+
+            '<option value="4" '+(r.severity==4?'selected':'')+'>4 Maximum</option>'+
+          '</select></td>'+
+          '<td><input id="risk_mit_'+i+'" value="'+esc(r.mitigations)+'" style="width:240px"/></td>'+
+          '<td><button class="btn alt" data-rm="'+i+'">×</button></td>'+
+        '</tr>';
+    }
+    body.innerHTML=
+      '<h2>6. Risk register</h2>'+
+      '<table class="risk-tbl"><thead><tr><th>ID</th><th>Category</th><th>Description</th><th>Likelihood</th><th>Severity</th><th>Mitigations</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<div class="actions"><button class="btn alt" id="addRisk">+ Add risk</button></div>'+
+      '<p><small class="hint">Risk score = Likelihood × Severity. Bands: 1–3 Low · 4–8 Medium · 9–14 High · 15–20 Severe.</small></p>';
+    $("addRisk").onclick=function(){
+      collect();
+      STATE.risks.push({id:"r"+(STATE.risks.length+1),category:"confidentiality",description:"",likelihood:1,severity:1,mitigations:""});
+      go(6);
+    };
+    [...document.querySelectorAll("[data-rm]")].forEach(function(b){
+      b.onclick=function(){
+        collect();
+        const idx=parseInt(b.dataset.rm,10);
+        STATE.risks.splice(idx,1);
+        go(6);
+      };
+    });
+  }
+  if(STEP===7){
+    body.innerHTML=
+      '<h2>7. Residual risk &amp; decision</h2><div class="row">'+
+      '<div class="col-6"><label>Decision</label><select id="decision">'+
+        '<option value="proceed" '+(STATE.residual.decision==='proceed'?'selected':'')+'>Proceed (risks acceptable / mitigated)</option>'+
+        '<option value="proceed_conditions" '+(STATE.residual.decision==='proceed_conditions'?'selected':'')+'>Proceed with conditions</option>'+
+        '<option value="redesign" '+(STATE.residual.decision==='redesign'?'selected':'')+'>Redesign required</option>'+
+        '<option value="consult" '+(STATE.residual.decision==='consult'?'selected':'')+'>Consult supervisory authority (Art. 36)</option>'+
+        '<option value="halt" '+(STATE.residual.decision==='halt'?'selected':'')+'>Do not proceed</option>'+
+      '</select></div>'+
+      '<div class="col-6">'+cb("authority_consultation",STATE.residual.authority_consultation,"Authority consultation initiated")+'</div>'+
+      '<div class="col-6"><label>Authority reference</label><input id="authority_ref" value="'+esc(STATE.residual.authority_ref)+'"/></div>'+
+      '<div class="col-6"><label>Signed off by</label><input id="signed_off_by" value="'+esc(STATE.residual.signed_off_by)+'"/></div>'+
+      '<div class="col-6"><label>Signed off at</label><input id="signed_off_at" value="'+esc(STATE.residual.signed_off_at)+'" placeholder="ISO date"/></div>'+
+      '<div class="col-12"><label>DPO opinion</label><textarea id="dpo_opinion">'+esc(STATE.residual.dpo_opinion)+'</textarea></div>'+
+      '</div>';
+  }
+  if(STEP===8){
+    body.innerHTML=
+      '<h2>8. EU AI Act module</h2>'+
+      '<p><small class="hint">Only relevant if the project uses AI / ML. Fill out if applicable.</small></p>'+
+      '<div class="checks">'+
+        cb("m9_uses_ai",STATE.m9.uses_ai,"Project uses AI / ML")+
+      '</div>'+
+      '<div class="row">'+
+      '<div class="col-6"><label>AI Act role</label><select id="m9_ai_role">'+
+        '<option value="provider" '+(STATE.m9.ai_role==='provider'?'selected':'')+'>Provider</option>'+
+        '<option value="deployer" '+(STATE.m9.ai_role==='deployer'?'selected':'')+'>Deployer</option>'+
+        '<option value="distributor" '+(STATE.m9.ai_role==='distributor'?'selected':'')+'>Distributor / Importer</option>'+
+        '<option value="oos" '+(STATE.m9.ai_role==='oos'?'selected':'')+'>Out of scope</option>'+
+      '</select></div>'+
+      '<div class="col-6"><label>Risk class</label><select id="m9_risk_class">'+
+        '<option value="minimal" '+(STATE.m9.risk_class==='minimal'?'selected':'')+'>Minimal</option>'+
+        '<option value="limited" '+(STATE.m9.risk_class==='limited'?'selected':'')+'>Limited (transparency)</option>'+
+        '<option value="high" '+(STATE.m9.risk_class==='high'?'selected':'')+'>High-risk (Annex III)</option>'+
+        '<option value="prohibited" '+(STATE.m9.risk_class==='prohibited'?'selected':'')+'>Prohibited (Art. 5)</option>'+
+      '</select></div>'+
+      '<div class="col-12"><label>AI purpose / system description</label><textarea id="m9_ai_purpose">'+esc(STATE.m9.ai_purpose)+'</textarea></div>'+
+      '<div class="col-6">'+cb("m9_foundation_model",STATE.m9.foundation_model,"Uses a foundation / general-purpose AI model")+'</div>'+
+      '<div class="col-6">'+cb("m9_gpai_provider",STATE.m9.gpai_provider,"We are a GPAI provider (own model)")+'</div>'+
+      '<div class="col-6">'+cb("m9_human_oversight",STATE.m9.human_oversight,"Human oversight implemented (Art. 14)")+'</div>'+
+      '<div class="col-6">'+cb("m9_logging",STATE.m9.logging,"Automatic event logging (Art. 12)")+'</div>'+
+      '<div class="col-6">'+cb("m9_bias_testing",STATE.m9.bias_testing,"Bias / fairness testing performed")+'</div>'+
+      '<div class="col-6">'+cb("m9_transparency_user",STATE.m9.transparency_user,"User-facing AI transparency (Art. 50)")+'</div>'+
+      '<div class="col-6">'+cb("m9_data_governance",STATE.m9.data_governance,"Training/validation data governance (Art. 10)")+'</div>'+
+      '<div class="col-6">'+cb("m9_robustness_tested",STATE.m9.robustness_tested,"Robustness / accuracy testing (Art. 15)")+'</div>'+
+      '<div class="col-6"><label>Conformity assessment</label><select id="m9_conformity_assessment">'+
+        '<option value="none" '+(STATE.m9.conformity_assessment==='none'?'selected':'')+'>None / N/A</option>'+
+        '<option value="internal" '+(STATE.m9.conformity_assessment==='internal'?'selected':'')+'>Internal control (Annex VI)</option>'+
+        '<option value="notified_body" '+(STATE.m9.conformity_assessment==='notified_body'?'selected':'')+'>Notified body (Annex VII)</option>'+
+        '<option value="self" '+(STATE.m9.conform_assessment==='self'?'selected':'')+'>Self-assessment (limited risk)</option>'+
+      '</select></div>'+
+      '<div class="col-6">'+cb("m9_fundamental_rights_impact",STATE.m9.fundamental_rights_impact,"Material impact on fundamental rights")+'</div>'+
+      '<div class="col-6">'+cb("m9_fria_done",STATE.m9.fria_done,"FRIA performed (Art. 27, public bodies / deployers of high-risk AI)")+'</div>'+
+      '</div>';
+  }
+  if(STEP===9){
+    body.innerHTML=
+      '<h2>9. Review</h2>'+
+      '<p>Click <b>Check Trigger</b> to confirm DPIA is required, then <b>Assess</b> for the full evaluation.</p>'+
+      '<div class="kv">'+
+        '<div>Ref</div><div>'+esc(STATE.meta.ref_no)+'</div>'+
+        '<div>Project</div><div>'+esc(STATE.scope.project)+'</div>'+
+        '<div>Lawful basis</div><div>'+esc(STATE.lawful.legal_basis)+'</div>'+
+        '<div>Special-cat basis</div><div>'+esc(STATE.lawful.special_category_basis)+'</div>'+
+        '<div>Cross-border?</div><div>'+(STATE.flow.cross_border?(esc(STATE.flow.destinations)||'yes'):'no')+' &middot; '+esc(STATE.flow.transfer_mechanism)+'</div>'+
+        '<div>Risks</div><div>'+STATE.risks.length+' entries</div>'+
+        '<div>AI used?</div><div>'+(STATE.m9.uses_ai?'Yes ('+esc(STATE.m9.risk_class)+')':'No')+'</div>'+
+        '<div>Decision</div><div>'+esc(STATE.residual.decision)+'</div>'+
+      '</div>'+
+      '<div class="row"><div class="col-12"><label>Notes</label><textarea id="notes">'+esc(STATE.notes)+'</textarea></div></div>';
+  }
+}
+// Splice steps 6-9 onto the existing go() by monkey-patching
+const _origGo = go;
+go = function(n){
+  STEP=Math.max(1,Math.min(9,n));
+  renderSteps();
+  if(n<=5){_origGo(n);return;}
+  go_part2();
+};
+function collect(){
+  const v=id=>{const el=$(id);if(!el)return undefined;return el.type==='checkbox'?el.checked:el.value;};
+  if(STEP===1){
+    STATE.meta.ref_no=v("ref_no")??STATE.meta.ref_no;
+    STATE.meta.owner=v("owner")??STATE.meta.owner;
+    STATE.meta.dpo=v("dpo")??STATE.meta.dpo;
+    STATE.scope.project=v("project")??STATE.scope.project;
+    STATE.scope.description=v("description")??STATE.scope.description;
+    STATE.scope.systems=v("systems")??STATE.scope.systems;
+    STATE.scope.lifecycle_stage=v("lifecycle_stage")??STATE.scope.lifecycle_stage;
+    STATE.scope.pia_done_before=!!v("pia_done_before");
+    STATE.scope.prior_ref=v("prior_ref")??STATE.scope.prior_ref;
+  }
+  if(STEP===2){
+    STATE.lawful.purpose=v("purpose")??STATE.lawful.purpose;
+    STATE.lawful.legal_basis=v("legal_basis")??STATE.lawful.legal_basis;
+    STATE.lawful.legal_basis_other=v("legal_basis_other")??STATE.lawful.legal_basis_other;
+    STATE.lawful.legitimate_interest_test=!!v("legitimate_interest_test");
+    STATE.lawful.special_category_basis=v("special_category_basis")??STATE.lawful.special_category_basis;
+    STATE.lawful.public_interest_law=v("public_interest_law")??STATE.lawful.public_interest_law;
+    STATE.lawful.retention_months=parseInt(v("retention_months")||"0",10);
+    STATE.lawful.retention_rule=v("retention_rule")??STATE.lawful.retention_rule;
+  }
+  if(STEP===3){
+    STATE.flow.categories_data=v("categories_data")??STATE.flow.categories_data;
+    STATE.flow.categories_subjects=v("categories_subjects")??STATE.flow.categories_subjects;
+    STATE.flow.sources=v("sources")??STATE.flow.sources;
+    STATE.flow.recipients=v("recipients")??STATE.flow.recipients;
+    STATE.flow.cross_border=!!v("cross_border");
+    STATE.flow.destinations=v("destinations")??STATE.flow.destinations;
+    STATE.flow.transfer_mechanism=v("transfer_mechanism")??STATE.flow.transfer_mechanism;
+    STATE.flow.dpa_refs=v("dpa_refs")??STATE.flow.dpa_refs;
+    STATE.flow.transfer_refs=v("transfer_refs")??STATE.flow.transfer_refs;
+  }
+  if(STEP===4){
+    STATE.necessity.purpose_specified=!!v("purpose_specified");
+    STATE.necessity.minimisation=!!v("minimisation");
+    STATE.necessity.accuracy=!!v("accuracy");
+    STATE.necessity.storage_limit=!!v("storage_limit");
+    STATE.necessity.less_intrusive_considered=!!v("less_intrusive_considered");
+    STATE.necessity.alternatives=v("alternatives")??STATE.necessity.alternatives;
+    STATE.necessity.justification=v("justification")??STATE.necessity.justification;
+  }
+  if(STEP===5){
+    STATE.rights.notice_layered=!!v("notice_layered");
+    STATE.rights.access_request_path=!!v("access_request_path");
+    STATE.rights.erasure_path=!!v("erasure_path");
+    STATE.rights.portability_path=!!v("portability_path");
+    STATE.rights.objection_path=!!v("objection_path");
+    STATE.rights.automated_decisions=!!v("automated_decisions");
+    STATE.rights.dpo_involved=!!v("dpo_involved");
+    STATE.rights.consultation_subjects=!!v("consultation_subjects");
+    STATE.rights.ad_safeguards=v("ad_safeguards")??STATE.rights.ad_safeguards;
+    STATE.rights.consultation_method=v("consultation_method")??STATE.rights.consultation_method;
+  }
+  if(STEP===6){
+    const n=STATE.risks.length;
+    for(let i=0;i<n;i++){
+      const r=STATE.risks[i];
+      r.id=v("risk_id_"+i)??r.id;
+      r.category=v("risk_cat_"+i)??r.category;
+      r.description=v("risk_desc_"+i)??r.description;
+      r.likelihood=parseInt(v("risk_lik_"+i)||"1",10);
+      r.severity=parseInt(v("risk_sev_"+i)||"1",10);
+      r.mitigations=v("risk_mit_"+i)??r.mitigations;
+    }
+  }
+  if(STEP===7){
+    STATE.residual.decision=v("decision")??STATE.residual.decision;
+    STATE.residual.authority_consultation=!!v("authority_consultation");
+    STATE.residual.authority_ref=v("authority_ref")??STATE.residual.authority_ref;
+    STATE.residual.signed_off_by=v("signed_off_by")??STATE.residual.signed_off_by;
+    STATE.residual.signed_off_at=v("signed_off_at")??STATE.residual.signed_off_at;
+    STATE.residual.dpo_opinion=v("dpo_opinion")??STATE.residual.dpo_opinion;
+  }
+  if(STEP===8){
+    STATE.m9.uses_ai=!!v("m9_uses_ai");
+    STATE.m9.ai_role=v("m9_ai_role")??STATE.m9.ai_role;
+    STATE.m9.risk_class=v("m9_risk_class")??STATE.m9.risk_class;
+    STATE.m9.ai_purpose=v("m9_ai_purpose")??STATE.m9.ai_purpose;
+    STATE.m9.foundation_model=!!v("m9_foundation_model");
+    STATE.m9.gpai_provider=!!v("m9_gpai_provider");
+    STATE.m9.human_oversight=!!v("m9_human_oversight");
+    STATE.m9.logging=!!v("m9_logging");
+    STATE.m9.bias_testing=!!v("m9_bias_testing");
+    STATE.m9.transparency_user=!!v("m9_transparency_user");
+    STATE.m9.data_governance=!!v("m9_data_governance");
+    STATE.m9.robustness_tested=!!v("m9_robustness_tested");
+    STATE.m9.conformity_assessment=v("m9_conformity_assessment")??STATE.m9.conformity_assessment;
+    STATE.m9.fundamental_rights_impact=!!v("m9_fundamental_rights_impact");
+    STATE.m9.fria_done=!!v("m9_fria_done");
+  }
+  if(STEP===9){STATE.notes=v("notes")??STATE.notes;}
+}
+function triggerCheck(){
+  collect();
+  // EDPB WP 248 nine criteria + Art. 35(3)
+  const c=[];
+  const push=(hit,label)=>c.push({hit,label});
+  const isSpecial = STATE.lawful.special_category_basis!=="none";
+  const largeScale = STATE.scope.description.length>0 || STATE.scope.systems.length>0;
+  push(STATE.rights.automated_decisions,"Evaluation or scoring (incl. profiling) — Art. 35(3)(a)");
+  push(STATE.rights.automated_decisions,"Automated decision-making with legal/similar significant effect");
+  push(false,"Systematic monitoring (esp. public areas)");
+  push(isSpecial,"Sensitive data or data of a highly personal nature");
+  push(largeScale && (STATE.scope.lifecycle_stage==="live"||STATE.scope.lifecycle_stage==="launch"),"Data processed on a large scale");
+  push(STATE.flow.recipients.toLowerCase().includes("match")||STATE.flow.sources.toLowerCase().includes("match"),"Matching or combining of datasets");
+  push(false,"Data concerning vulnerable data subjects (children, employees, patients, asylum seekers)");
+  push(STATE.m9.uses_ai && (STATE.m9.risk_class==="high"||STATE.m9.foundation_model),"Innovative use or applying new technological/organizational solutions");
+  push(false,"Processing that prevents data subjects from exercising a right or using a service/contract");
+  const hits=c.filter(x=>x.hit).length;
+  const required = hits>=2 || STATE.flow.cross_border || isSpecial || STATE.rights.automated_decisions;
+  $("triggerCard").style.display="block";
+  $("triggerSummary").innerHTML='<div class="kv"><div>DPIA required?</div><div><span class="pill '+(required?'bad':'ok')+'">'+(required?'Yes':'Probably not')+'</span></div><div>WP248 criteria met</div><div>'+hits+' / 9</div></div>';
+  $("triggerList").innerHTML=c.map(function(x){return '<li class="'+(x.hit?'bad':'ok')+'">'+(x.hit?'\u2713 ':'\u2717 ')+esc(x.label)+'</li>';}).join("");
+}
+function assess(){
+  collect();
+  const f=[],r=[];
+  // Lawful basis / purpose
+  if(!STATE.lawful.purpose||STATE.lawful.purpose.length<10){f.push({level:"bad",msg:"Purpose not specified or too vague (Art. 5(1)(b))."});r.push("State a specific, explicit, legitimate purpose.");}
+  if(STATE.lawful.legal_basis==="legitimate_interest"&&!STATE.lawful.legitimate_interest_test){f.push({level:"bad",msg:"Legitimate interests basis without an LIA on file."});r.push("Document the three-part LIA (purpose, necessity, balancing test).");}
+  if(STATE.lawful.special_category_basis==="none"&&STATE.scope.description.toLowerCase().match(/health|biometric|genetic|race|religion|sexual|criminal/)){f.push({level:"warn",msg:"Description mentions special-category data but no Art. 9 basis selected."});r.push("Select the applicable Art. 9(2) condition or remove the data.");}
+  if(STATE.lawful.retention_months<=0){f.push({level:"warn",msg:"Retention period not set."});r.push("Define retention period and deletion trigger (Art. 5(1)(e)).");}
+  // Necessity & proportionality
+  ["purpose_specified","minimisation","accuracy","storage_limit","less_intrusive_considered"].forEach(function(k){
+    if(!STATE.necessity[k]){f.push({level:"warn",msg:"Necessity element missing: "+k});r.push("Document compliance with "+k+" or remediate the gap.");}
+  });
+  // Rights
+  ["notice_layered","access_request_path","erasure_path","portability_path","objection_path"].forEach(function(k){
+    if(!STATE.rights[k]){f.push({level:"bad",msg:"Data subject rights process missing: "+k});r.push("Implement a documented process for "+k+".");}
+  });
+  if(STATE.rights.automated_decisions && !STATE.rights.ad_safeguards){f.push({level:"bad",msg:"Solely automated decisions (Art. 22) without documented safeguards."});r.push("Provide human review, contestation route, and meaningful information about logic.");}
+  if(!STATE.rights.dpo_involved){f.push({level:"warn",msg:"DPO consultation not recorded (Art. 35(2))."});r.push("Record DPO consultation date and opinion.");}
+  // Transfers
+  if(STATE.flow.cross_border && STATE.flow.transfer_mechanism==="none"){f.push({level:"bad",msg:"Cross-border data flow with no Chapter V mechanism."});r.push("Run the Transfer Advisor and adopt SCCs/DPF/adequacy.");}
+  // Risk scoring
+  let highestScore=0, highestRisk=null;
+  STATE.risks.forEach(function(rk){
+    const s=(rk.likelihood||1)*(rk.severity||1);
+    if(s>highestScore){highestScore=s;highestRisk=rk;}
+    if(s>=9 && (!rk.mitigations||rk.mitigations.length<5)){f.push({level:"bad",msg:"High-risk entry without mitigations: "+rk.id+" — "+rk.description});r.push("Add mitigations for "+rk.id+" (e.g., encryption, access control, training).");}
+  });
+  const overallBand = highestScore>=15?"Severe":(highestScore>=9?"High":(highestScore>=4?"Medium":"Low"));
+  // Residual decision sanity
+  if(overallBand==="Severe"&&STATE.residual.decision==="proceed"){f.push({level:"bad",msg:"Severe residual risk but decision is to proceed without conditions."});r.push("Either consult the supervisory authority (Art. 36) or redesign.");}
+  if(overallBand==="High"&&STATE.residual.decision==="proceed"&&!STATE.residual.authority_consultation){f.push({level:"warn",msg:"High residual risk; consider Art. 36 prior consultation."});r.push("Initiate prior consultation with the supervisory authority.");}
+  if(!STATE.residual.signed_off_by){f.push({level:"warn",msg:"DPIA not signed off."});r.push("Have controller and DPO sign off the final DPIA.");}
+  // AI Act module
+  let aiHTML="";
+  if(STATE.m9.uses_ai){
+    const a=[];
+    if(STATE.m9.risk_class==="prohibited"){f.push({level:"bad",msg:"AI use classified as prohibited (Art. 5)."});r.push("Do not deploy. Redesign or abandon.");}
+    if(STATE.m9.risk_class==="high"){
+      ["human_oversight","logging","data_governance","robustness_tested"].forEach(function(k){
+        if(!STATE.m9[k]){f.push({level:"bad",msg:"High-risk AI missing requirement: "+k});r.push("Implement "+k+" (AI Act Art. 9–15).");}
+      });
+      if(STATE.m9.conformity_assessment==="none"){f.push({level:"bad",msg:"High-risk AI without conformity assessment selected."});r.push("Select Annex VI or VII conformity assessment route.");}
+      if(STATE.m9.ai_role==="deployer"&&STATE.m9.fundamental_rights_impact&&!STATE.m9.fria_done){f.push({level:"bad",msg:"Deployer with fundamental-rights impact has not performed FRIA (Art. 27)."});r.push("Perform FRIA before deployment.");}
+    }
+    if(STATE.m9.risk_class==="limited"&&!STATE.m9.transparency_user){f.push({level:"warn",msg:"Limited-risk AI without user transparency (Art. 50)."});r.push("Inform users they are interacting with an AI system.");}
+    if(STATE.m9.gpai_provider){a.push("GPAI provider obligations (Art. 53–55) apply: model documentation, training-data summary, EU AI Office cooperation, and copyright policy.");}
+    if(STATE.m9.foundation_model){a.push("Foundation/GPAI dependency: check provider documentation, acceptable use, data provenance, and downstream transparency duties.");}
+    aiHTML='<p><span class="pill warn">AI module active</span></p><ul>'+a.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>';
+  } else {
+    aiHTML='<p><span class="pill ok">No AI module selected</span></p>';
+  }
+  const bad=f.filter(x=>x.level==="bad").length;
+  const warn=f.filter(x=>x.level==="warn").length;
+  const band=bad>=3?"High":(bad>0?"Medium-High":(warn>=4?"Medium":(warn>0?"Low-Medium":"Low")));
+  $("resultCard").style.display="block";
+  $("resultSummary").innerHTML='<div class="kv">'+
+    '<div>Residual risk</div><div><span class="pill '+(overallBand==="Severe"||overallBand==="High"?'bad':(overallBand==="Medium"?'warn':'ok'))+'">'+overallBand+'</span></div>'+
+    '<div>Compliance band</div><div><span class="pill '+(bad>0?'bad':(warn>0?'warn':'ok'))+'">'+band+'</span></div>'+
+    '<div>Highest risk</div><div>'+(highestRisk?esc(highestRisk.id+" — "+highestRisk.description):"—")+'</div>'+
+    '<div>Findings</div><div>'+bad+' red · '+warn+' warnings</div>'+
+  '</div>';
+  $("findings").innerHTML=f.length?f.map(x=>'<li class="'+x.level+'">'+esc(x.msg)+'</li>').join(""):"<li class='ok'>No issues detected.</li>";
+  $("redlines").innerHTML=r.length?r.map(x=>'<li>'+esc(x)+'</li>').join(""):"<li>None.</li>";
+  $("aiActSummary").innerHTML=aiHTML;
+  STATE._assessment={band,overallBand,bad,warn,highestScore,highestRisk,findings:f,redlines:r,aiHTML,at:new Date().toISOString()};
+}
+/* === END PART 3 === */
+function registry(){
+  try{return JSON.parse(localStorage.getItem("dpia_registry_v1")||"{}");}catch(e){return {};}
+}
+function writeRegistry(reg){localStorage.setItem("dpia_registry_v1",JSON.stringify(reg));}
+function saveLocal(){
+  collect();
+  if(!STATE.meta.id) STATE.meta.id="dpia_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,6);
+  STATE.meta.saved_at=new Date().toISOString();
+  const reg=registry();
+  reg[STATE.meta.id]=STATE;
+  writeRegistry(reg);
+  alert("Saved. ID: "+STATE.meta.id);
+}
+function loadLocal(){
+  const id=prompt("Enter DPIA ID to load:");
+  if(!id) return;
+  const reg=registry();
+  if(!reg[id]){alert("Not found.");return;}
+  Object.assign(STATE,reg[id]);
+  go(1);
+}
+function buildReportHTML(){
+  const a=STATE._assessment||{band:"Low",bad:0,warn:0,findings:[],redlines:[],risks:[],aiHTML:""};
+  const row=function(k,v){return "<tr><td style=\"color:#666;padding:4px 8px;border-bottom:1px solid #eee\">"+esc(k)+"</td><td style=\"padding:4px 8px;border-bottom:1px solid #eee\">"+esc(v)+"</td></tr>";};
+  const chk=function(k,v){return "<tr><td style=\"color:#666;padding:4px 8px;border-bottom:1px solid #eee\">"+esc(k)+"</td><td style=\"padding:4px 8px;border-bottom:1px solid #eee\">"+(v?"&#10003;":"&#10007;")+"</td></tr>";};
+  let riskRows="";
+  STATE.risks.forEach(function(rk){
+    const score=(rk.likelihood||1)*(rk.severity||1);
+    const band=score>=15?"Severe":(score>=9?"High":(score>=4?"Medium":"Low"));
+    riskRows+="<tr><td>"+esc(rk.id)+"</td><td>"+esc(rk.category)+"</td><td>"+esc(rk.description)+"</td><td>"+rk.likelihood+"</td><td>"+rk.severity+"</td><td>"+score+" ("+band+")</td><td>"+esc(rk.mitigations)+"</td></tr>";
+  });
+  const head="<!doctype html><html><head><meta charset=\"utf-8\"><title>DPIA "+esc(STATE.meta.ref_no)+"</title><style>body{font:13px/1.5 system-ui;margin:24px;color:#111}h1{font-size:18px}h2{font-size:14px;margin-top:18px}table{border-collapse:collapse;width:100%;margin-bottom:8px}td,th{vertical-align:top;border-bottom:1px solid #eee;padding:4px 8px;text-align:left}th{background:#f6f6f8;color:#555;font-weight:500}.pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd}.bad{background:#fee;color:#900}.warn{background:#ffe;color:#960}.ok{background:#efe;color:#060}</style></head><body>";
+  const body=
+    "<h1>Data Protection Impact Assessment &mdash; "+esc(STATE.meta.ref_no||"(no ref)")+"</h1>"+
+    "<p>Project: <b>"+esc(STATE.scope.project)+"</b> &middot; Owner: "+esc(STATE.meta.owner)+" &middot; DPO: "+esc(STATE.meta.dpo)+" &middot; Saved: "+esc(STATE.meta.saved_at||"\u2014")+"</p>"+
+    "<h2>1. Scope</h2><table>"+
+      row("Description",STATE.scope.description)+row("Systems",STATE.scope.systems)+row("Lifecycle stage",STATE.scope.lifecycle_stage)+
+      chk("Prior DPIA exists",STATE.scope.pia_done_before)+row("Prior reference",STATE.scope.prior_ref)+
+    "</table>"+
+    "<h2>2. Lawful basis &amp; purpose</h2><table>"+
+      row("Purpose",STATE.lawful.purpose)+row("Legal basis (Art. 6)",STATE.lawful.legal_basis)+row("Detail",STATE.lawful.legal_basis_other)+
+      chk("LIA completed (if 6(1)(f))",STATE.lawful.legitimate_interest_test)+
+      row("Special-cat basis (Art. 9)",STATE.lawful.special_category_basis)+row("Public-interest law",STATE.lawful.public_interest_law)+
+      row("Retention (months)",STATE.lawful.retention_months)+row("Retention rule",STATE.lawful.retention_rule)+
+    "</table>"+
+    "<h2>3. Data flow</h2><table>"+
+      row("Categories of data",STATE.flow.categories_data)+row("Categories of subjects",STATE.flow.categories_subjects)+
+      row("Sources",STATE.flow.sources)+row("Recipients",STATE.flow.recipients)+
+      chk("Cross-border",STATE.flow.cross_border)+row("Destinations",STATE.flow.destinations)+row("Transfer mechanism",STATE.flow.transfer_mechanism)+
+      row("Linked DPAs",STATE.flow.dpa_refs)+row("Linked TIAs",STATE.flow.transfer_refs)+
+    "</table>"+
+    "<h2>4. Necessity &amp; proportionality</h2><table>"+
+      chk("Purpose specified",STATE.necessity.purpose_specified)+chk("Minimisation",STATE.necessity.minimisation)+
+      chk("Accuracy",STATE.necessity.accuracy)+chk("Storage limit",STATE.necessity.storage_limit)+
+      chk("Less-intrusive considered",STATE.necessity.less_intrusive_considered)+
+      row("Alternatives",STATE.necessity.alternatives)+row("Justification",STATE.necessity.justification)+
+    "</table>"+
+    "<h2>5. Rights &amp; safeguards</h2><table>"+
+      chk("Layered notice",STATE.rights.notice_layered)+chk("Access path",STATE.rights.access_request_path)+
+      chk("Erasure path",STATE.rights.erasure_path)+chk("Portability path",STATE.rights.portability_path)+
+      chk("Objection path",STATE.rights.objection_path)+chk("Solely automated decisions",STATE.rights.automated_decisions)+
+      row("Automated-decision safeguards",STATE.rights.ad_safeguards)+
+      chk("DPO involved",STATE.rights.dpo_involved)+chk("Subjects consulted",STATE.rights.consultation_subjects)+
+      row("Consultation method &amp; outcome",STATE.rights.consultation_method)+
+    "</table>"+
+    "<h2>6. Risk register</h2><table><thead><tr><th>ID</th><th>Category</th><th>Description</th><th>L</th><th>S</th><th>Score</th><th>Mitigations</th></tr></thead><tbody>"+riskRows+"</tbody></table>"+
+    "<h2>7. Residual risk &amp; decision</h2><table>"+
+      row("Decision",STATE.residual.decision)+chk("Authority consultation",STATE.residual.authority_consultation)+
+      row("Authority reference",STATE.residual.authority_ref)+row("DPO opinion",STATE.residual.dpo_opinion)+
+      row("Signed off by",STATE.residual.signed_off_by)+row("Signed off at",STATE.residual.signed_off_at)+
+    "</table>"+
+    "<h2>8. EU AI Act module</h2><table>"+
+      chk("Uses AI",STATE.m9.uses_ai)+row("AI Act role",STATE.m9.ai_role)+row("Risk class",STATE.m9.risk_class)+
+      row("AI purpose",STATE.m9.ai_purpose)+chk("Foundation model",STATE.m9.foundation_model)+chk("GPAI provider",STATE.m9.gpai_provider)+
+      chk("Human oversight",STATE.m9.human_oversight)+chk("Logging",STATE.m9.logging)+chk("Bias testing",STATE.m9.bias_testing)+
+      chk("User transparency",STATE.m9.transparency_user)+chk("Data governance",STATE.m9.data_governance)+chk("Robustness tested",STATE.m9.robustness_tested)+
+      row("Conformity assessment",STATE.m9.conformity_assessment)+chk("Fundamental-rights impact",STATE.m9.fundamental_rights_impact)+chk("FRIA done",STATE.m9.fria_done)+
+    "</table>"+
+    "<h2>Assessment</h2>"+
+    "<p>Outcome: <span class=\"pill "+(a.bad>0?"bad":(a.warn>0?"warn":"ok"))+"\">"+esc(a.band||"")+"</span> &middot; Findings (bad): "+a.bad+" &middot; Warnings: "+a.warn+"</p>"+
+    "<h3>Findings</h3><ul>"+(a.findings.map(function(x){return "<li class=\""+x.level+"\">"+esc(x.msg)+"</li>";}).join("")||"<li>None.</li>")+"</ul>"+
+    "<h3>Recommended mitigations</h3><ul>"+(a.redlines.map(function(x){return "<li>"+esc(x)+"</li>";}).join("")||"<li>None.</li>")+"</ul>"+
+    (a.aiHTML?"<h3>AI Act observations</h3>"+a.aiHTML:"")+
+    "<p>Notes: "+esc(STATE.notes)+"</p>"+
+    "<p style=\"margin-top:24px;color:#888;font-size:11px\">Generated by GDPR Toolkit &mdash; DPIA. Not legal advice.</p>";
+  return head+body+"</body></html>";
+}
+function download(name,data,mime){
+  const blob=new Blob([data],{type:mime||"application/octet-stream"});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");
+  link.href=url;link.download=name;document.body.appendChild(link);link.click();
+  setTimeout(function(){URL.revokeObjectURL(url);link.remove();},500);
+}
+function exportHTML(){
+  assess();
+  const html=buildReportHTML();
+  const fname="dpia_"+(STATE.meta.ref_no||"report").replace(/\W+/g,"_")+".html";
+  download(fname,html,"text/html");
+}
+function exportJSON(){
+  assess();
+  const payload={meta:STATE.meta,scope:STATE.scope,lawful:STATE.lawful,flow:STATE.flow,necessity:STATE.necessity,rights:STATE.rights,risks:STATE.risks,residual:STATE.residual,m9:STATE.m9,notes:STATE.notes,assessment:STATE._assessment};
+  const fname="dpia_"+(STATE.meta.ref_no||"report").replace(/\W+/g,"_")+".json";
+  download(fname,JSON.stringify(payload,null,2),"application/json");
+}
+(function boot(){
+  const lang=localStorage.getItem("dpia_lang")||"en";
+  $("lang").value=lang;
+  $("lang").onchange=function(){localStorage.setItem("dpia_lang",$("lang").value);renderSteps();go(STEP);};
+  $("btnPrev").onclick=function(){collect();go(STEP-1);};
+  $("btnNext").onclick=function(){collect();go(STEP+1);};
+  $("btnTrigger").onclick=triggerCheck;
+  $("btnAssess").onclick=assess;
+  $("btnSave").onclick=saveLocal;
+  $("btnLoad").onclick=loadLocal;
+  $("btnHTML").onclick=exportHTML;
+  $("btnJSON").onclick=exportJSON;
+  $("btnPrint").onclick=function(){window.print();};
+  const params=new URLSearchParams(location.search);
+  const id=params.get("id");
+  if(id){
+    const reg=registry();
+    if(reg[id]){Object.assign(STATE,reg[id]);}
+  }
+  if(params.get("new")==="1"){STATE.meta.id=null;STATE.meta.saved_at=null;}
+  renderSteps();
+  go(1);
+})();
+</script>
+</body>
+</html>
