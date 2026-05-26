@@ -43,6 +43,14 @@
   th{background:#f8fafc}
   #flash{position:fixed;bottom:16px;right:16px;background:#111;color:#fff;padding:8px 12px;border-radius:6px;display:none}
   .small{font-size:11px;color:var(--mut)}
+
+/* === LegalAIPay brand block === */
+.lap-brand{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;color:var(--ink,#2d3748);padding:6px 10px;border-radius:8px;border:1px solid var(--line,#e2e8f0);background:#fff;transition:all .15s ease;margin-right:8px;vertical-align:middle}
+.lap-brand:hover{border-color:#3182ce;box-shadow:0 2px 6px rgba(49,130,206,.12)}
+.lap-mark{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,#1a365d,#3182ce);color:#fff;font-size:13px;font-weight:800}
+.lap-word{font-size:14px;color:#1a365d;letter-spacing:.2px}
+.lap-sub{font-size:11px;color:#718096;font-weight:600;padding:2px 6px;border-radius:4px;background:#edf2f7;margin-left:2px}
+@media (max-width:640px){.lap-sub{display:none}}
 </style>
 </head>
 <body>
@@ -51,7 +59,7 @@
   <select id="lang" title="Language">
     <option value="en">EN</option><option value="fr">FR</option><option value="de">DE</option><option value="it">IT</option>
   </select>
-  <a class="btn" href="index.html">← LegalAIPay</a> <a class="btn" href="dashboard.html">Dashboard</a>
+  <a href="https://legalaipay.com/" class="lap-brand" title="Back to LegalAIPay home"><span class="lap-mark">L</span><span class="lap-word">LegalAIPay</span><span class="lap-sub">GDPR Kit</span></a> <a class="btn" href="dashboard.html">Dashboard</a>
   <span class="sp"></span>
   <button id="btnAssess">⚙️ Assess</button>
   <button id="btnSave">💾 Save</button>
