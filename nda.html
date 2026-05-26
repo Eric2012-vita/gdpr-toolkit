@@ -38,12 +38,20 @@ h3{font-size:13px;margin:14px 0 6px 0;color:var(--muted);text-transform:uppercas
 .kv{display:grid;grid-template-columns:160px 1fr;gap:6px 12px;font-size:13px}
 .kv div:nth-child(odd){color:var(--muted)}
 hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+
+/* === LegalAIPay brand block === */
+.lap-brand{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;color:var(--ink,#2d3748);padding:6px 10px;border-radius:8px;border:1px solid var(--line,#e2e8f0);background:#fff;transition:all .15s ease;margin-right:8px;vertical-align:middle}
+.lap-brand:hover{border-color:#3182ce;box-shadow:0 2px 6px rgba(49,130,206,.12)}
+.lap-mark{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,#1a365d,#3182ce);color:#fff;font-size:13px;font-weight:800}
+.lap-word{font-size:14px;color:#1a365d;letter-spacing:.2px}
+.lap-sub{font-size:11px;color:#718096;font-weight:600;padding:2px 6px;border-radius:4px;background:#edf2f7;margin-left:2px}
+@media (max-width:640px){.lap-sub{display:none}}
 </style>
 </head>
 <body>
 <header>
   <h1>NDA Triage <small class="hint">· GDPR Toolkit</small></h1>
-  <a href="index.html">← LegalAIPay</a> <a href="dashboard.html">Dashboard</a>
+  <a href="https://legalaipay.com/" class="lap-brand" title="Back to LegalAIPay home"><span class="lap-mark">L</span><span class="lap-word">LegalAIPay</span><span class="lap-sub">GDPR Kit</span></a> <a href="dashboard.html">Dashboard</a>
   <a href="dpia.html">DPIA</a>
   <a href="breach.html">Breach</a>
   <select id="lang" aria-label="Language">
