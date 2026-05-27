@@ -48,6 +48,25 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .lap-word{font-size:14px;color:#1a365d;letter-spacing:.2px}
 .lap-sub{font-size:11px;color:#718096;font-weight:600;padding:2px 6px;border-radius:4px;background:#edf2f7;margin-left:2px}
 @media (max-width:640px){.lap-sub{display:none}}
+
+/* === Completeness validation === */
+.completeness-bar{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 16px;display:flex;align-items:center;gap:12px;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.completeness-bar .cb-label{font-weight:600;color:#2d3748}
+.completeness-bar .cb-track{flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;max-width:280px}
+.completeness-bar .cb-fill{height:100%;background:linear-gradient(90deg,#3182ce,#38a169);transition:width .3s;width:0%}
+.completeness-bar .cb-stat{color:#4a5568;font-size:12px;min-width:120px;text-align:right}
+.completeness-bar .cb-stat.cb-complete{color:#22543d;font-weight:600}
+.cb-modal{position:fixed;inset:0;background:rgba(15,30,61,.6);display:none;align-items:center;justify-content:center;z-index:9999}
+.cb-modal.show{display:flex}
+.cb-modal-box{background:#fff;border-radius:10px;padding:24px;max-width:480px;width:90%;max-height:75vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.cb-modal h3{margin:0 0 6px;font-size:18px;color:#1a202c}
+.cb-modal .cm-sub{color:#718096;font-size:12px;margin-bottom:14px}
+.cb-modal ul{list-style:none;padding:0;margin:0 0 16px;max-height:240px;overflow-y:auto}
+.cb-modal li{padding:8px 12px;background:#fff5f5;border-left:3px solid #e53e3e;border-radius:4px;margin-bottom:6px;font-size:13px;color:#742a2a}
+.cb-modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.cb-modal button{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-weight:600;font-size:13px}
+.cb-cancel{background:#e2e8f0;color:#2d3748}
+.cb-force{background:#e53e3e;color:#fff}
 </style>
 </head>
 <body>
@@ -434,6 +453,19 @@ function exportJSON(){
   if(params.get("new")==="1"){STATE.meta.id=null;STATE.meta.saved_at=null;}
   renderSteps();
   go(1);
+})();
+
+// === Completeness validation ===
+(function(){
+var REQUIRED_PATHS=[{"path":"meta.ref_no","label":"Step 1 — Reference no."},{"path":"meta.owner","label":"Step 1 — Owner"},{"path":"parties.controller","label":"Step 1 — Controller"},{"path":"parties.processor","label":"Step 1 — Processor"},{"path":"processing.purpose","label":"Step 2 — Purpose"},{"path":"processing.categories_data","label":"Step 2 — Categories of data"},{"path":"processing.categories_subjects","label":"Step 2 — Categories of subjects"}];
+function getByPath(obj,path){var parts=path.split(".");var cur=obj;for(var i=0;i<parts.length;i++){if(!cur)return undefined;cur=cur[parts[i]]}return cur}
+function isFilled(v){if(v===null||v===undefined)return false;if(typeof v==="string")return v.trim().length>0;if(typeof v==="number")return true;if(typeof v==="boolean")return v;return false}
+function computeStats(){if(typeof STATE==="undefined")return{filled:0,total:REQUIRED_PATHS.length,missing:REQUIRED_PATHS.slice()};var miss=[];var filled=0;REQUIRED_PATHS.forEach(function(rp){if(isFilled(getByPath(STATE,rp.path)))filled++;else miss.push(rp)});return{filled:filled,total:REQUIRED_PATHS.length,missing:miss}}
+function renderBar(){var bar=document.getElementById("completenessBar");if(!bar){bar=document.createElement("div");bar.id="completenessBar";bar.className="completeness-bar";bar.innerHTML="<span class=\"cb-label\">📋 Completeness</span><div class=\"cb-track\"><div class=\"cb-fill\" id=\"cbFill\"></div></div><span class=\"cb-stat\" id=\"cbStat\">0 / 0</span>";document.body.insertBefore(bar,document.body.firstChild)}var s=computeStats();var pct=s.total===0?100:Math.round(s.filled/s.total*100);var fill=document.getElementById("cbFill");var stat=document.getElementById("cbStat");if(fill)fill.style.width=pct+"%";if(stat){stat.textContent=s.filled+" / "+s.total+" required ("+pct+"%)";stat.classList.toggle("cb-complete",s.filled===s.total)}}
+function openModal(onForce){var s=computeStats();if(s.missing.length===0){if(onForce)onForce();return}var modal=document.getElementById("cbModal");if(!modal){modal=document.createElement("div");modal.id="cbModal";modal.className="cb-modal";modal.innerHTML="<div class=\"cb-modal-box\"><h3>⚠️ Completeness Check</h3><div class=\"cm-sub\">The following required fields are missing. Continue anyway, or fill them in first.</div><ul id=\"cbModalList\"></ul><div class=\"cb-modal-actions\"><button class=\"cb-cancel\" id=\"cbCancel\">Cancel</button><button class=\"cb-force\" id=\"cbForce\">Export Anyway</button></div></div>";modal.onclick=function(e){if(e.target===modal)modal.classList.remove("show")};document.body.appendChild(modal)}var ul=modal.querySelector("#cbModalList");ul.innerHTML="";s.missing.forEach(function(m){var li=document.createElement("li");li.textContent=m.label;ul.appendChild(li)});document.getElementById("cbCancel").onclick=function(){modal.classList.remove("show")};document.getElementById("cbForce").onclick=function(){modal.classList.remove("show");if(onForce)onForce()};modal.classList.add("show")}
+function collectIfPresent(){if(typeof collect==="function"){try{collect()}catch(e){}}}
+function init(){renderBar();var btnHTML=document.getElementById("btnHTML");var btnJSON=document.getElementById("btnJSON");if(btnHTML){btnHTML.onclick=function(){collectIfPresent();openModal(function(){if(typeof exportHTML==="function")exportHTML()})}}if(btnJSON){btnJSON.onclick=function(){collectIfPresent();openModal(function(){if(typeof exportJSON==="function")exportJSON()})}}document.addEventListener("input",function(){collectIfPresent();renderBar()});document.addEventListener("change",function(){collectIfPresent();renderBar()});var navBtns=["btnPrev","btnNext"];navBtns.forEach(function(id){var b=document.getElementById(id);if(b){var orig=b.onclick;b.onclick=function(e){if(orig)orig.call(this,e);setTimeout(renderBar,50)}}});setInterval(renderBar,1500)}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else setTimeout(init,200);
 })();
 </script>
 </body>
