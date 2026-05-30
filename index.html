@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LegalAIPay — Global Business Privacy & Legal Protection</title>
-<meta name="description" content="LegalAIPay helps CEOs and founders of global small businesses stay legally protected in Europe and the US — without needing a lawyer on speed dial. Step-by-step guidance, plain language, zero jargon.">
+<meta name="description" content="LegalAIPay helps CEOs and founders of global small businesses stay legally protected across Europe, the US, and China — without needing a lawyer on speed dial. Step-by-step guidance, plain language, zero jargon.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -76,14 +76,19 @@ section{padding:88px 0}
 .tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
 .tool-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:12px;transition:.25s}
 .tool-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:#cfd6e6}
+.tool-card.china{border-color:#f3d2d2;background:linear-gradient(180deg,#fff 0%,#fffafa 100%)}
+.tool-card.china:hover{border-color:#e6b8b8}
 .tool-card .top-row{display:flex;align-items:flex-start;justify-content:space-between}
 .tool-ico{width:48px;height:48px;border-radius:13px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:23px;flex-shrink:0}
+.tool-ico.china{background:#fdeaea;color:#b00020}
 .badge-live{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.07em;padding:4px 10px;border-radius:999px;text-transform:uppercase;background:#e6f6ee;color:#0a7a3b}
 .badge-live::before{content:"";width:6px;height:6px;border-radius:50%;background:#0a7a3b}
+.badge-region{display:inline-flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.05em;padding:4px 10px;border-radius:999px;background:#fdeaea;color:#b00020}
 .tool-card h3{margin:0;font-size:18px;font-weight:700;color:var(--ink);line-height:1.25}
 .tool-card .plain-name{font-size:12.5px;color:var(--muted);font-weight:500;margin:-6px 0 0}
 .tool-card p{margin:0;color:#475067;font-size:14.5px;line-height:1.6;flex:1}
 .tool-card .launch{margin-top:auto;display:inline-flex;align-items:center;gap:7px;color:var(--accent);font-weight:600;font-size:14px;padding-top:4px;transition:.2s}
+.tool-card.china .launch{color:#b00020}
 .tool-card .launch:hover{gap:11px}
 .why-section{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
@@ -91,11 +96,11 @@ section{padding:88px 0}
 .why-card h4{margin:0 0 8px;color:var(--ink);font-size:17px;font-weight:700}
 .why-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
 .audience{background:var(--grad);color:#fff;padding:80px 0}
-.aud-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:48px}
-.aud-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:28px}
-.aud-card .icon{font-size:32px;margin-bottom:14px}
-.aud-card h4{margin:0 0 10px;font-size:18px;font-weight:700;color:#fff}
-.aud-card p{margin:0;color:#c0cce0;font-size:14px;line-height:1.65}
+.aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:48px}
+.aud-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:26px}
+.aud-card .icon{font-size:30px;margin-bottom:14px}
+.aud-card h4{margin:0 0 10px;font-size:17px;font-weight:700;color:#fff}
+.aud-card p{margin:0;color:#c0cce0;font-size:13.5px;line-height:1.6}
 .cta-banner{text-align:center;padding:96px 0}
 .cta-banner h2{font-size:40px;font-weight:800;color:var(--ink);letter-spacing:-.02em;margin:0 0 16px}
 .cta-banner p{color:var(--muted);font-size:16.5px;max-width:540px;margin:0 auto 32px}
@@ -132,13 +137,13 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
   <div class="container hero-center">
     <span class="eyebrow">&#127758; For Global Small Business CEOs &amp; Founders</span>
     <h1>Your business crosses borders.<br><span class="accent">Your legal protection should too.</span></h1>
-    <p class="subtitle">LegalAIPay gives you simple, step-by-step legal protection tools built for small businesses operating across Europe, the US, and beyond &mdash; no law degree required.</p>
+    <p class="subtitle">LegalAIPay gives you simple, step-by-step legal protection tools built for small businesses operating across Europe, the US, and China &mdash; no law degree required.</p>
     <div class="hero-actions">
       <a class="btn btn-hero-primary" href="#how-it-works">Show me what to do &darr;</a>
       <a class="btn btn-hero-outline" href="dashboard.html">Open My Dashboard</a>
     </div>
     <div class="trust-row">
-      <span>&#10003; Covers EU (GDPR) &amp; US privacy laws</span>
+      <span>&#10003; Covers EU, US &amp; China privacy laws</span>
       <span>&#10003; Plain English &mdash; no legal jargon</span>
       <span>&#10003; Your data never leaves your browser</span>
       <span>&#10003; Built by practising lawyers</span>
@@ -149,9 +154,9 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
 <div class="stats-bar">
   <div class="container">
     <div class="stats-grid">
-      <div class="stat"><div class="n">6</div><div class="l">Ready-to-use legal tools</div></div>
+      <div class="stat"><div class="n">7</div><div class="l">Ready-to-use legal tools</div></div>
       <div class="stat"><div class="n">100%</div><div class="l">Private &mdash; runs in your browser</div></div>
-      <div class="stat"><div class="n">EU + US</div><div class="l">Laws covered</div></div>
+      <div class="stat"><div class="n">EU&middot;US&middot;CN</div><div class="l">Regions covered</div></div>
       <div class="stat"><div class="n">0</div><div class="l">Data sent to any server</div></div>
     </div>
   </div>
@@ -162,7 +167,7 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
     <div class="steps-header">
       <p class="steps-q">&#128161; Not sure where to start?</p>
       <h2 class="steps-h">If I run a global business, what do I need to do &mdash; step by step?</h2>
-      <p class="steps-sub">Follow these 6 steps and you will have the key legal protections in place for operating across Europe and the US.</p>
+      <p class="steps-sub">Follow these steps and you will have the key legal protections in place for operating across Europe, the US, and China.</p>
     </div>
     <div class="steps-grid">
       <div class="step-card">
@@ -179,26 +184,32 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
       </div>
       <div class="step-card">
         <div class="step-num">3</div>
+        <h3>Selling in or to China? Run a PIPIA</h3>
+        <p>If you handle the personal data of people in China, China's PIPL law usually requires a formal Personal Information Protection Impact Assessment (PIPIA). Our bilingual tool walks you through it.</p>
+        <span class="step-tool">&#128737;&#65039; China PIPIA Assessment</span>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
         <h3>Set up agreements with your suppliers</h3>
         <p>Do you use third-party tools like Mailchimp, Stripe, or Salesforce that touch your customers' data? You need a written agreement with each of them.</p>
         <span class="step-tool">&#128203; Supplier Data Agreement</span>
       </div>
       <div class="step-card">
-        <div class="step-num">4</div>
+        <div class="step-num">5</div>
         <h3>Review contracts &amp; NDAs before signing</h3>
         <p>Before signing any business contract or NDA, run it through our AI review. It flags risky clauses in plain language so you know what you are agreeing to.</p>
         <span class="step-tool">&#128196; NDA &amp; Contract Review</span>
       </div>
       <div class="step-card">
-        <div class="step-num">5</div>
+        <div class="step-num">6</div>
         <h3>Handle data transfers across countries</h3>
-        <p>Sending customer data from Europe to the US, China, or elsewhere? There are specific rules. We will tell you exactly what applies to your situation.</p>
+        <p>Sending customer data from Europe to the US, China, or elsewhere? Each route has its own rules. We will tell you exactly what applies to your situation.</p>
         <span class="step-tool">&#127758; Cross-Border Data Check</span>
       </div>
       <div class="step-card">
-        <div class="step-num">6</div>
+        <div class="step-num">7</div>
         <h3>Know what to do if something goes wrong</h3>
-        <p>If there is ever a data breach, you may have 72 hours to notify authorities. This tool walks you through who to notify, when, and what to say.</p>
+        <p>If there is ever a data breach, you may have only hours to notify the authorities. This tool walks you through who to notify, when, and what to say.</p>
         <span class="step-tool">&#128680; Incident Response Guide</span>
       </div>
     </div>
@@ -208,8 +219,8 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
 <section id="tools">
   <div class="container">
     <p class="section-label">Your Legal Toolkit</p>
-    <h2 class="section-title">Six tools. One dashboard. Zero confusion.</h2>
-    <p class="section-sub">Each tool tackles a specific legal task that every global business needs to handle. Plain language, guided questions, no technical background required.</p>
+    <h2 class="section-title">Seven tools. One dashboard. Zero confusion.</h2>
+    <p class="section-sub">Each tool tackles a specific legal task that every global business needs to handle &mdash; across the EU, the US, and China. Plain language, guided questions, no technical background required.</p>
     <div class="tools-grid">
       <div class="tool-card">
         <div class="top-row"><div class="tool-ico">&#128272;</div><span class="badge-live">Live</span></div>
@@ -217,6 +228,13 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
         <p class="plain-name">For businesses that handle people's personal data</p>
         <p>Answer simple questions about how your business uses data. We will tell you if there are any risks, what to fix, and give you a written report you can show investors, partners, or regulators.</p>
         <a class="launch" href="dpia.html">Start Privacy Risk Check &rarr;</a>
+      </div>
+      <div class="tool-card china">
+        <div class="top-row"><div class="tool-ico china">&#128737;&#65039;</div><span class="badge-region">&#127464;&#127475; China &middot; Live</span></div>
+        <h3>China PIPIA Assessment</h3>
+        <p class="plain-name">For businesses handling data of people in China</p>
+        <p>A bilingual (English / Chinese) Personal Information Protection Impact Assessment built for China's PIPL law. Guided modules, auto data classification, and an exportable report &mdash; everything you need to stay compliant in China.</p>
+        <a class="launch" href="https://legalaipay.com/pipia.html">Start China PIPIA &rarr;</a>
       </div>
       <div class="tool-card">
         <div class="top-row"><div class="tool-ico">&#128680;</div><span class="badge-live">Live</span></div>
@@ -243,7 +261,7 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
         <div class="top-row"><div class="tool-ico">&#127758;</div><span class="badge-live">Live</span></div>
         <h3>Cross-Border Data Check</h3>
         <p class="plain-name">For businesses sending data between countries</p>
-        <p>Tell us which countries your business sends data to and from. We will tell you what rules apply, what agreements you need, and give you a simple checklist to follow.</p>
+        <p>Tell us which countries your business sends data to and from &mdash; including China. We will tell you what rules apply, what agreements you need, and give you a simple checklist to follow.</p>
         <a class="launch" href="transfer.html">Check Data Transfers &rarr;</a>
       </div>
       <div class="tool-card">
@@ -265,13 +283,18 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
     <div class="aud-grid">
       <div class="aud-card">
         <div class="icon">&#127968;</div>
-        <h4>US-based CEO selling into Europe</h4>
+        <h4>US CEO selling into Europe</h4>
         <p>You sell to customers in Germany, France, or the UK. European privacy law applies to you &mdash; even if your company is incorporated in Delaware. We make compliance simple.</p>
       </div>
       <div class="aud-card">
         <div class="icon">&#127979;</div>
         <h4>European founder with US operations</h4>
-        <p>You are based in London, Paris, or Berlin but you have US customers, US partners, or use US cloud tools. Cross-border data rules apply. We handle it step by step.</p>
+        <p>You are based in London, Paris, or Berlin but you have US customers, partners, or cloud tools. Cross-border data rules apply. We handle it step by step.</p>
+      </div>
+      <div class="aud-card">
+        <div class="icon">&#127464;&#127475;</div>
+        <h4>Doing business in or with China</h4>
+        <p>You sell to, source from, or operate in China. China's PIPL has strict rules on personal data and cross-border transfers. Our bilingual PIPIA tool keeps you compliant.</p>
       </div>
       <div class="aud-card">
         <div class="icon">&#127758;</div>
@@ -289,8 +312,8 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
     <p class="section-sub">Not for lawyers. Not for IT teams. For founders and CEOs who need to protect their business without getting lost in legal documents.</p>
     <div class="why-grid">
       <div class="why-card"><div class="ico">&#128274;</div><h4>100% Private</h4><p>Everything runs inside your browser. No data is ever uploaded or sent to a server. Your confidential business information stays yours.</p></div>
-      <div class="why-card"><div class="ico">&#128218;</div><h4>No Jargon</h4><p>Forget "Article 35" and "Standard Contractual Clauses." Every step uses plain business language that any CEO can understand and act on.</p></div>
-      <div class="why-card"><div class="ico">&#127758;</div><h4>EU &amp; US Law Covered</h4><p>GDPR, CCPA, UK data law &mdash; we cover the key regulations that matter most to small businesses operating in Europe and North America.</p></div>
+      <div class="why-card"><div class="ico">&#128218;</div><h4>No Jargon</h4><p>Forget "Article 35," "Standard Contractual Clauses," and "PIPIA." Every step uses plain business language that any CEO can understand and act on.</p></div>
+      <div class="why-card"><div class="ico">&#127758;</div><h4>EU, US &amp; China Covered</h4><p>GDPR, US privacy laws (CCPA), and China's PIPL &mdash; we cover the key regulations that matter most to small businesses operating across these major markets.</p></div>
       <div class="why-card"><div class="ico">&#9889;</div><h4>Fast &amp; Actionable</h4><p>No lengthy setup. No account needed. Open a tool, answer a few business questions, and get a clear action plan you can use today.</p></div>
     </div>
   </div>
@@ -299,7 +322,7 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
 <section class="cta-banner">
   <div class="container">
     <h2>Ready to protect your global business?</h2>
-    <p>Start with Step 1 &mdash; it takes less than 10 minutes and you will immediately know where you stand legally.</p>
+    <p>Start with Step 1 &mdash; it takes less than 10 minutes and you will immediately know where you stand legally in the EU, the US, and China.</p>
     <a class="btn btn-primary" style="font-size:16px;padding:14px 28px;margin:0 8px" href="#how-it-works">Follow the Step-by-Step Guide</a>
     <a class="btn btn-light" style="font-size:16px;padding:14px 28px;margin:0 8px" href="dashboard.html">Open Dashboard</a>
   </div>
@@ -310,11 +333,12 @@ footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
     <div class="foot-grid">
       <div class="foot-brand">
         <div class="logo" style="margin-bottom:14px">L</div>
-        <p>LegalAIPay gives global small business owners simple, private, and actionable legal protection tools &mdash; no lawyer required.</p>
+        <p>LegalAIPay gives global small business owners simple, private, and actionable legal protection tools across the EU, the US, and China &mdash; no lawyer required.</p>
       </div>
       <div class="foot-col">
         <h5>Tools</h5>
         <a href="dpia.html">Privacy Risk Check</a>
+        <a href="https://legalaipay.com/pipia.html">China PIPIA Assessment</a>
         <a href="breach.html">Incident Response</a>
         <a href="dpa.html">Supplier Agreement</a>
         <a href="nda.html">NDA Review</a>
