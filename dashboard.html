@@ -32,6 +32,14 @@
   .toolbar input[type=search],.toolbar select{border:1px solid var(--ln);border-radius:6px;padding:6px 8px;font:inherit;background:#fff}
   .toolbar input[type=search]{min-width:240px}
   .toolbar .right{margin-left:auto;display:flex;gap:6px}
+  .toolbar a.btn{font-size:12px;padding:6px 10px;border:1px solid var(--ln);background:#fff;border-radius:6px;cursor:pointer;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;white-space:nowrap}
+  .toolbar a.btn:hover{background:#f3f4f6}
+  @media(max-width:760px){
+    .toolbar{align-items:stretch}
+    .toolbar input[type=search],.toolbar select{width:100%;min-width:0}
+    .toolbar .right{margin-left:0;width:100%;flex-wrap:wrap}
+    .toolbar a.btn{flex:1 1 calc(50% - 6px);justify-content:center}
+  }
 
   .card{background:#fff;border:1px solid var(--ln);border-radius:10px;padding:10px;overflow:auto}
   table{width:100%;border-collapse:collapse}
@@ -68,16 +76,16 @@
 </head>
 <body>
 <header>
-  <h1>🛡️ Compliance Hub</h1><a href="https://legalaipay.com/" class="lap-brand" title="Back to LegalAIPay home"><span class="lap-mark">L</span><span class="lap-word">LegalAIPay</span><span class="lap-sub">GDPR Kit</span></a>
+  <h1>Compliance Hub</h1><a href="https://legalaipay.com/" class="lap-brand" title="Back to LegalAIPay home"><span class="lap-mark">L</span><span class="lap-word">LegalAIPay</span><span class="lap-sub">GDPR Kit</span></a>
   <select id="lang" title="Language">
     <option value="en">EN</option><option value="fr">FR</option><option value="de">DE</option><option value="it">IT</option>
   </select>
   <span class="sp"></span>
-  <button id="btnRefresh">🔄 Refresh</button>
-  <button id="btnExport">⬇ Export all</button>
-  <button id="btnImport">⬆ Import bundle</button>
+  <button id="btnRefresh">Refresh</button>
+  <button id="btnExport">Export all</button>
+  <button id="btnImport">Import bundle</button>
   <input id="fileImport" type="file" accept="application/json" style="display:none">
-  <button id="btnClear">🗑 Clear all</button>
+  <button id="btnClear">Clear all</button>
 </header>
 <div class="notice">All data is read from this browser's localStorage. Nothing is sent to a server. Open each tool in its own page to edit a record.</div>
 
@@ -96,7 +104,8 @@
       <option>Permitted under Art. 47 (BCRs)</option>
     </select>
     <div class="right">
-      <a class="btn" href="dpia.html?new=1">+ DPIA</a>
+      <a class="btn" href="dpia.html?mode=trigger">DPIA screening</a>
+      <a class="btn" href="dpia.html?new=1">+ Full DPIA</a>
       <a class="btn" href="breach.html?new=1">+ Breach</a>
       <a class="btn" href="nda.html?new=1">+ NDA</a>
       <a class="btn" href="dpa.html?new=1">+ DPA</a>
@@ -113,19 +122,19 @@
     <div id="empty" class="empty" style="display:none">No records match the current filters. <a href="#" id="clearFiltersLink">Clear filters</a></div>
     <div id="emptyOnboard" class="empty onboard" style="display:none">
       <h3 class="onboard-h">No compliance records yet</h3>
-      <p class="onboard-sub small">This Compliance Hub gathers the records you create across the GDPR Kit tools. Start with one of the actions below — new records will appear here automatically.</p>
+      <p class="onboard-sub small">Start with "Do I need a DPIA?" if you are unsure. Use the full DPIA only when the processing is likely high-risk or you already know Art. 35 applies. New records will appear here automatically.</p>
       <div class="onboard-grid">
-        <a class="onboard-card" href="dpia.html?new=1"><p class="oc-t">Run a DPIA</p><p class="oc-d">Data Protection Impact Assessment (Art. 35) for higher-risk processing.</p><span class="oc-cta">Start DPIA →</span></a>
-        <a class="onboard-card" href="breach.html?new=1"><p class="oc-t">Log a breach</p><p class="oc-d">Assess and document a personal-data breach (Art. 33/34).</p><span class="oc-cta">Record breach →</span></a>
-        <a class="onboard-card" href="dpa.html?new=1"><p class="oc-t">Draft a DPA</p><p class="oc-d">Controller–processor data processing agreement (Art. 28).</p><span class="oc-cta">Create DPA →</span></a>
-        <a class="onboard-card" href="nda.html?new=1"><p class="oc-t">Triage an NDA</p><p class="oc-d">Quick review of a non-disclosure agreement.</p><span class="oc-cta">Start NDA triage →</span></a>
-        <a class="onboard-card" href="contract.html?new=1"><p class="oc-t">Review a contract</p><p class="oc-d">Screen a contract for data-protection clauses and risks.</p><span class="oc-cta">Review contract →</span></a>
-        <a class="onboard-card" href="transfer.html?new=1"><p class="oc-t">Check a transfer</p><p class="oc-d">Cross-border transfer advisor (Ch. V): adequacy, SCCs, TIA.</p><span class="oc-cta">Assess transfer →</span></a>
+        <a class="onboard-card" href="dpia.html?mode=trigger"><p class="oc-t">Check whether a DPIA is needed</p><p class="oc-d">Short Art. 35 trigger screen before committing to a full assessment.</p><span class="oc-cta">Start screening &rarr;</span></a>
+        <a class="onboard-card" href="dpia.html?new=1"><p class="oc-t">Build a full DPIA record</p><p class="oc-d">Data Protection Impact Assessment for higher-risk processing.</p><span class="oc-cta">Start full DPIA &rarr;</span></a>
+        <a class="onboard-card" href="breach.html?new=1"><p class="oc-t">Log a breach</p><p class="oc-d">Assess and document a personal-data breach (Art. 33/34).</p><span class="oc-cta">Record breach &rarr;</span></a>
+        <a class="onboard-card" href="dpa.html?new=1"><p class="oc-t">Draft a DPA</p><p class="oc-d">Controller-processor data processing agreement (Art. 28).</p><span class="oc-cta">Create DPA &rarr;</span></a>
+        <a class="onboard-card" href="transfer.html?new=1"><p class="oc-t">Check a transfer</p><p class="oc-d">Cross-border transfer advisor (Ch. V): adequacy, SCCs, TIA.</p><span class="oc-cta">Assess transfer &rarr;</span></a>
+        <a class="onboard-card" href="contract.html?new=1"><p class="oc-t">Review a contract</p><p class="oc-d">Screen a contract for data-protection clauses and risks.</p><span class="oc-cta">Review contract &rarr;</span></a>
       </div>
     </div>
   </section>
 
-  <p class="small" style="margin-top:10px">Tip: bookmark <code>?tab=contracts</code>, <code>?tab=transfers</code> etc. to deep-link.</p>
+  <p class="small" style="margin-top:10px">Suggested order: screen first, then build the full DPIA, then link DPAs, transfers, breach records, and contract reviews as supporting evidence.</p>
 </main>
 
 <script>
