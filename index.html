@@ -3,366 +3,232 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LegalAIPay — Global Business Privacy & Legal Protection</title>
-<meta name="description" content="The browser-based China–EU–US privacy compliance cockpit for founders, in-house counsel and legal professionals.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>LegalAIPay GDPR Kit</title>
+<meta name="description" content="A practical GDPR decision gateway for DPIA screening, full DPIA records, data transfers, DPAs, breach logs, and compliance records.">
 <style>
 :root{
-  --navy-900:#0a1230;--navy-800:#0e1a3d;--navy-700:#142354;--navy-600:#1b2d6b;
-  --ink:#0b1020;--text:#0f172a;--muted:#5a6478;--line:#e6e9f2;--bg:#f7f8fc;--card:#ffffff;
-  --accent:#3b6fd4;--accent-2:#5b8def;--accent-soft:#e8efff;
-  --ok:#0a7a3b;--warn:#b15c00;--danger:#b00020;
-  --grad:linear-gradient(160deg,#0a1230 0%,#0e1a3d 55%,#1b2d6b 100%);
-  --grad-text:linear-gradient(90deg,#7aa6ff 0%,#a9c0e8 50%,#cfd8e8 100%);
-  --shadow:0 8px 30px rgba(10,18,48,.08);
-  --shadow-md:0 16px 48px rgba(10,18,48,.14);
+  --ink:#172033;
+  --muted:#657085;
+  --line:#dfe5ee;
+  --bg:#f6f8fb;
+  --panel:#ffffff;
+  --soft:#edf5f2;
+  --green:#176f54;
+  --blue:#2f66b3;
+  --violet:#6b5aa8;
+  --amber:#9b5a11;
+  --danger:#a22836;
+  --shadow:0 10px 30px rgba(30,44,70,.08);
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+body{font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
 a{color:inherit;text-decoration:none}
-.container{max-width:1180px;margin:0 auto;padding:0 24px}
-.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid var(--line)}
-.nav{display:flex;align-items:center;justify-content:space-between;height:66px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink)}
-.logo{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#1b2d6b,#0a1230);color:#fff;display:grid;place-items:center;font-weight:800;font-size:17px}
-.nav-links{display:flex;gap:28px;color:var(--text);font-weight:500;font-size:14.5px}
-.nav-links a:hover{color:var(--accent)}
-.nav-cta{display:flex;align-items:center;gap:14px}
-.btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px;padding:10px 20px;border-radius:10px;border:1px solid transparent;transition:.2s;cursor:pointer}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:#2d5bbf;transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,111,212,.28)}
-.btn-light{background:#fff;color:var(--ink);border-color:var(--line)}
-.btn-light:hover{border-color:#cfd6e6;box-shadow:var(--shadow)}
-.hero{background:var(--grad);color:#fff;padding:90px 0 100px;position:relative;overflow:hidden}
-.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 70% 50%,rgba(91,141,239,.12) 0%,transparent 70%);pointer-events:none}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);border-radius:999px;color:#cfd8e8;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;margin-bottom:20px}
-.hero h1{font-size:52px;line-height:1.08;margin:0 auto 18px;font-weight:800;letter-spacing:-.025em;max-width:860px}
-.hero h1 .accent{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero .subtitle{font-size:18.5px;color:#c8d2e6;max-width:680px;margin:0 auto 28px;line-height:1.65}
-.hero-center{text-align:center}
-.hero-actions{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-bottom:40px}
-.hero-actions .btn{padding:14px 24px;border-radius:12px;font-size:15px}
-.btn-hero-primary{background:#fff;color:var(--accent);font-weight:700}
-.btn-hero-primary:hover{background:#f0f4ff;transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
-.btn-hero-outline{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}
-.btn-hero-outline:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.55)}
-.trust-row{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;color:#9aa6bf;font-size:13px;font-weight:500}
-.trust-row span{display:flex;align-items:center;gap:7px}
-.stats-bar{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr)}
-.stat{padding:28px 16px;text-align:center;border-right:1px solid var(--line)}
-.stat:last-child{border-right:none}
-.stat .n{font-size:32px;font-weight:800;color:var(--ink)}
-.stat .l{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.4}
-section{padding:88px 0}
-.section-label{text-align:center;color:var(--accent);font-size:12.5px;letter-spacing:.14em;font-weight:700;text-transform:uppercase;margin-bottom:12px}
-.section-title{text-align:center;font-size:38px;line-height:1.15;font-weight:800;color:var(--ink);letter-spacing:-.02em;margin:0 0 14px}
-.section-sub{text-align:center;color:var(--muted);max-width:660px;margin:0 auto 52px;font-size:16px;line-height:1.65}
-.steps-section{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.steps-header{text-align:center;margin-bottom:52px}
-.steps-q{font-size:15px;color:var(--muted);font-weight:500;margin-bottom:6px}
-.steps-h{font-size:38px;font-weight:800;color:var(--ink);letter-spacing:-.02em;line-height:1.15;max-width:720px;margin:0 auto 14px}
-.steps-sub{color:var(--muted);font-size:16px;max-width:600px;margin:0 auto}
-.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.step-card{background:var(--bg);border:1.5px solid var(--line);border-radius:16px;padding:28px;position:relative;transition:.22s}
-.step-card:hover{border-color:#c0ccee;box-shadow:var(--shadow);transform:translateY(-2px)}
-.step-num{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-.step-card h3{margin:0 0 10px;font-size:17px;font-weight:700;color:var(--ink)}
-.step-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
-.step-tool{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:12.5px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:5px 11px;border-radius:999px}
-.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-.tool-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:12px;transition:.25s}
-.tool-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:#cfd6e6}
-.tool-card.china{border-color:#f3d2d2;background:linear-gradient(180deg,#fff 0%,#fffafa 100%)}
-.tool-card.china:hover{border-color:#e6b8b8}
-.tool-card .top-row{display:flex;align-items:flex-start;justify-content:space-between}
-.tool-ico{width:48px;height:48px;border-radius:13px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:23px;flex-shrink:0}
-.tool-ico.china{background:#fdeaea;color:#b00020}
-.badge-live{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.07em;padding:4px 10px;border-radius:999px;text-transform:uppercase;background:#e6f6ee;color:#0a7a3b}
-.badge-live::before{content:"";width:6px;height:6px;border-radius:50%;background:#0a7a3b}
-.badge-region{display:inline-flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.05em;padding:4px 10px;border-radius:999px;background:#fdeaea;color:#b00020}
-.tool-card h3{margin:0;font-size:18px;font-weight:700;color:var(--ink);line-height:1.25}
-.tool-card .plain-name{font-size:12.5px;color:var(--muted);font-weight:500;margin:-6px 0 0}
-.tool-card p{margin:0;color:#475067;font-size:14.5px;line-height:1.6;flex:1}
-.tool-card .launch{margin-top:auto;display:inline-flex;align-items:center;gap:7px;color:var(--accent);font-weight:600;font-size:14px;padding-top:4px;transition:.2s}
-.tool-card.china .launch{color:#b00020}
-.tool-card .launch:hover{gap:11px}
-.why-section{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
-.why-card .ico{width:46px;height:46px;border-radius:13px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:22px;margin-bottom:14px}
-.why-card h4{margin:0 0 8px;color:var(--ink);font-size:17px;font-weight:700}
-.why-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
-.audience{background:var(--grad);color:#fff;padding:80px 0}
-.aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:48px}
-.aud-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:26px}
-.aud-card .icon{font-size:30px;margin-bottom:14px}
-.aud-card h4{margin:0 0 10px;font-size:17px;font-weight:700;color:#fff}
-.aud-card p{margin:0;color:#c0cce0;font-size:13.5px;line-height:1.6}
-.cta-banner{text-align:center;padding:96px 0}
-.cta-banner h2{font-size:40px;font-weight:800;color:var(--ink);letter-spacing:-.02em;margin:0 0 16px}
-.cta-banner p{color:var(--muted);font-size:16.5px;max-width:540px;margin:0 auto 32px}
-footer{background:#070c1f;color:#aab3c7;padding:60px 0 28px;font-size:14px}
-.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px;margin-bottom:36px}
-.foot-brand .logo{margin-bottom:14px}
-.foot-brand p{color:#8893ad;font-size:13.5px;max-width:300px;line-height:1.65}
-.foot-col h5{color:#fff;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;margin:0 0 14px;font-weight:700}
-.foot-col a{display:block;color:#aab3c7;padding:4px 0;font-size:14px}
-.foot-col a:hover{color:#fff}
-.foot-bottom{border-top:1px solid #182143;padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#7785a0}
-@media(max-width:980px){.tools-grid{grid-template-columns:repeat(2,1fr)}.why-grid{grid-template-columns:repeat(2,1fr)}.stats-grid{grid-template-columns:repeat(2,1fr)}.aud-grid{grid-template-columns:1fr 1fr}.steps-grid{grid-template-columns:1fr 1fr}.hero h1{font-size:40px}.section-title,.steps-h{font-size:30px}.foot-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){.nav-links{display:none}.tools-grid,.why-grid,.stats-grid,.aud-grid,.steps-grid{grid-template-columns:1fr}.hero{padding:66px 0 74px}.hero h1{font-size:30px}section{padding:66px 0}.foot-grid{grid-template-columns:1fr}.cta-banner h2{font-size:28px}}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+.site-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);backdrop-filter:saturate(140%) blur(8px)}
+.nav{min-height:64px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:750}
+.mark{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:#172033;color:#fff;font-weight:800}
+.brand small{display:block;color:var(--muted);font-weight:600;font-size:11px;margin-top:-2px}
+.nav-links{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nav-links a,.btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-weight:650;font-size:13px}
+.nav-links a:hover,.btn:hover{border-color:#b9c7dc;box-shadow:0 4px 14px rgba(23,32,51,.08)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff}
+.btn.text{background:transparent;border-color:transparent;box-shadow:none;color:var(--blue);padding-left:6px;padding-right:6px}
+main{padding:22px 0 56px}
+.hero{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(340px,.92fr);gap:20px;align-items:stretch;margin-top:18px}
+.hero-panel,.workflow-panel,.band,.tool-card,.output-card{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.hero-panel{padding:28px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:12px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+h1{font-size:36px;line-height:1.12;margin:0 0 12px;letter-spacing:0}
+.lead{font-size:17px;color:#465266;max-width:680px;margin:0 0 18px}
+.decision-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+.decision{display:flex;flex-direction:column;gap:9px;min-height:198px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:16px}
+.decision:hover{border-color:#b9c7dc;box-shadow:var(--shadow)}
+.decision .tag{width:max-content;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:750}
+.tag.green{background:#e4f3ed;color:var(--green)}
+.tag.blue{background:#e8f0fc;color:var(--blue)}
+.tag.violet{background:#efecfa;color:var(--violet)}
+.decision h2{font-size:16px;line-height:1.25;margin:0}
+.decision p{margin:0;color:var(--muted);font-size:13px;flex:1}
+.fine{margin:16px 0 0;color:var(--muted);font-size:12px}
+.workflow-panel{padding:22px}
+.workflow-panel h2,.band h2{margin:0 0 10px;font-size:17px}
+.flow-map{display:grid;gap:10px;margin-top:14px}
+.flow-step{display:grid;grid-template-columns:42px 1fr;gap:12px;align-items:start;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fbfcfe}
+.flow-step .num{width:32px;height:32px;border-radius:8px;background:#f0f4f8;display:grid;place-items:center;font-weight:800;color:#344154}
+.flow-step strong{display:block;font-size:13px;margin-bottom:2px}
+.flow-step span{display:block;color:var(--muted);font-size:12px}
+.bands{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
+.band{padding:22px}
+.band-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:14px}
+.band-head p{margin:0;color:var(--muted);max-width:680px}
+.prep-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.prep{border:1px solid var(--line);border-radius:8px;background:#fbfcfe;padding:14px}
+.prep strong{display:block;font-size:13px;margin-bottom:6px}
+.prep ul,.mapping ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px}
+.prep li,.mapping li{margin:4px 0}
+.mapping{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.map-block{border-left:3px solid var(--green);background:#fbfcfe;padding:12px 14px;border-radius:0 8px 8px 0}
+.map-block h3{font-size:13px;margin:0 0 5px}
+.map-block p{margin:0;color:var(--muted);font-size:13px}
+.tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tool-card{padding:15px;min-height:138px}
+.tool-card h3{font-size:14px;margin:0 0 6px}
+.tool-card p{font-size:12.5px;color:var(--muted);margin:0 0 11px}
+.tool-card a{color:var(--blue);font-weight:700;font-size:12.5px}
+.outputs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.output-card{padding:14px}
+.output-card h3{font-size:13px;margin:0 0 5px}
+.output-card p{font-size:12.5px;color:var(--muted);margin:0}
+footer{border-top:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px;padding:18px 0}
+footer .wrap{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
+@media(max-width:980px){
+  .hero{grid-template-columns:1fr}
+  .decision-grid,.prep-grid,.outputs{grid-template-columns:1fr}
+  .tools,.mapping{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  .wrap{padding:0 16px}
+  .nav{align-items:flex-start;flex-direction:column;padding:10px 0}
+  .nav-links{margin-left:0}
+  h1{font-size:28px}
+  .hero-panel,.workflow-panel,.band{padding:18px}
+  .tools,.mapping{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-
 <header class="site-header">
-  <div class="container nav">
-    <a class="brand" href="https://legalaipay.com"><span class="logo">L</span><span>LegalAIPay</span></a>
-    <nav class="nav-links">
-      <a href="#how-it-works">How It Works</a>
-      <a href="#tools">Tools</a>
-      <a href="#why">Why LegalAIPay</a>
-      <a href="https://legalaipay.com">Main Site</a>
+  <div class="wrap nav">
+    <a class="brand" href="index.html" aria-label="LegalAIPay GDPR Kit home">
+      <span class="mark">L</span>
+      <span>LegalAIPay<br><small>GDPR Kit</small></span>
+    </a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="dpia.html?mode=trigger">DPIA screening</a>
+      <a href="dpia.html?new=1">Full DPIA</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="https://legalaipay.com/">Main site</a>
     </nav>
-    <div class="nav-cta">
-      <a class="btn btn-primary" href="dashboard">Open Compliance Hub &rarr;</a>
-    </div>
   </div>
 </header>
 
-<section class="hero">
-  <div class="container hero-center">
-    <span class="eyebrow">&#127758; For Global Small Business CEOs &amp; Founders</span>
-    <h1>Your business crosses borders.<br><span class="accent">Your legal protection should too.</span></h1>
-    <p class="subtitle">LegalAIPay gives you simple, step-by-step legal protection tools built for small businesses operating across Europe, the US, and China &mdash; no law degree required.</p>
-    <div class="hero-actions">
-      <a class="btn btn-hero-primary" href="#how-it-works">Show me what to do &darr;</a>
-      <a class="btn btn-hero-outline" href="dashboard">Open Compliance Hub</a>
-    </div>
-    <div class="trust-row">
-      <span>&#10003; Covers EU, US &amp; China privacy laws</span>
-      <span>&#10003; Plain English &mdash; no legal jargon</span>
-      <span>&#10003; Your data never leaves your browser</span>
-      <span>&#10003; Built by practising lawyers</span>
-    </div>
-  </div>
-</section>
+<main class="wrap">
+  <section class="hero" aria-labelledby="page-title">
+    <div class="hero-panel">
+      <div class="eyebrow">GDPR decision gateway</div>
+      <h1 id="page-title">LegalAIPay GDPR Kit</h1>
+      <p class="lead">Start with the same question a DPO would ask: are we screening a new processing activity, building a full DPIA record, or managing existing GDPR evidence?</p>
 
-<div class="stats-bar">
-  <div class="container">
-    <div class="stats-grid">
-      <div class="stat"><div class="n">7</div><div class="l">Ready-to-use legal tools</div></div>
-      <div class="stat"><div class="n">100%</div><div class="l">Private &mdash; runs in your browser</div></div>
-      <div class="stat"><div class="n">EU&middot;US&middot;CN</div><div class="l">Regions covered</div></div>
-      <div class="stat"><div class="n">0</div><div class="l">Data sent to any server</div></div>
-    </div>
-  </div>
-</div>
+      <div class="decision-grid" aria-label="Choose where to start">
+        <a class="decision" href="dpia.html?mode=trigger">
+          <span class="tag green">Start here if unsure</span>
+          <h2>I need to know whether a DPIA is required</h2>
+          <p>Use a short GDPR Art. 35 trigger screen before filling the full assessment.</p>
+          <span class="btn green">Run DPIA screening</span>
+        </a>
+        <a class="decision" href="dpia.html?new=1">
+          <span class="tag blue">Full record</span>
+          <h2>I already know this processing needs a DPIA</h2>
+          <p>Build the assessment record, risk register, DPO opinion, and decision log.</p>
+          <span class="btn primary">Start full DPIA</span>
+        </a>
+        <a class="decision" href="dashboard.html">
+          <span class="tag violet">Records</span>
+          <h2>I need to manage GDPR documents</h2>
+          <p>Open the dashboard for DPIAs, DPAs, transfers, incidents, contracts, and exports.</p>
+          <span class="btn">Open dashboard</span>
+        </a>
+      </div>
 
-<section class="steps-section" id="how-it-works">
-  <div class="container">
-    <div class="steps-header">
-      <p class="steps-q">&#128161; Not sure where to start?</p>
-      <h2 class="steps-h">If I run a global business, what do I need to do &mdash; step by step?</h2>
-      <p class="steps-sub">Follow these steps and you will have the key legal protections in place for operating across Europe, the US, and China.</p>
+      <p class="fine">This kit creates a structured working record for privacy teams and counsel. It is not a substitute for legal advice on high-risk or regulator-facing matters.</p>
     </div>
-    <div class="steps-grid">
-      <div class="step-card">
-        <div class="step-num">1</div>
-        <h3>Understand what personal data you collect</h3>
-        <p>List every type of information you collect about people &mdash; customers, employees, website visitors. This could be names, emails, location, payment info, or browsing habits.</p>
-        <span class="step-tool">&#128269; Start with a Privacy Risk Check</span>
-      </div>
-      <div class="step-card">
-        <div class="step-num">2</div>
-        <h3>Check if your data activities are high-risk</h3>
-        <p>If you process large amounts of personal data, use tracking, profiling, or sensitive data (health, finances), run a quick Privacy Risk Check before proceeding.</p>
-        <span class="step-tool">&#128272; Privacy Risk Check</span>
-      </div>
-      <div class="step-card">
-        <div class="step-num">3</div>
-        <h3>Selling in or to China? Run a PIPIA</h3>
-        <p>If you handle the personal data of people in China, China's PIPL law usually requires a formal Personal Information Protection Impact Assessment (PIPIA). Our bilingual tool walks you through it.</p>
-        <span class="step-tool">&#128737;&#65039; China PIPIA Assessment</span>
-      </div>
-      <div class="step-card">
-        <div class="step-num">4</div>
-        <h3>Set up agreements with your suppliers</h3>
-        <p>Do you use third-party tools like Mailchimp, Stripe, or Salesforce that touch your customers' data? You need a written agreement with each of them.</p>
-        <span class="step-tool">&#128203; Supplier Data Agreement</span>
-      </div>
-      <div class="step-card">
-        <div class="step-num">5</div>
-        <h3>Review contracts &amp; NDAs before signing</h3>
-        <p>Before signing any business contract or NDA, run it through our AI review. It flags risky clauses in plain language so you know what you are agreeing to.</p>
-        <span class="step-tool">&#128196; NDA &amp; Contract Review</span>
-      </div>
-      <div class="step-card">
-        <div class="step-num">6</div>
-        <h3>Handle data transfers across countries</h3>
-        <p>Sending customer data from Europe to the US, China, or elsewhere? Each route has its own rules. We will tell you exactly what applies to your situation.</p>
-        <span class="step-tool">&#127758; Cross-Border Data Check</span>
-      </div>
-      <div class="step-card">
-        <div class="step-num">7</div>
-        <h3>Know what to do if something goes wrong</h3>
-        <p>If there is ever a data breach, you may have only hours to notify the authorities. This tool walks you through who to notify, when, and what to say.</p>
-        <span class="step-tool">&#128680; Incident Response Guide</span>
-      </div>
-    </div>
-  </div>
-</section>
 
-<section id="tools">
-  <div class="container">
-    <p class="section-label">Your Legal Toolkit</p>
-    <h2 class="section-title">Seven tools. One dashboard. Zero confusion.</h2>
-    <p class="section-sub">Each tool tackles a specific legal task that every global business needs to handle &mdash; across the EU, the US, and China. Plain language, guided questions, no technical background required.</p>
-    <div class="tools-grid">
-      <div class="tool-card">
-        <div class="top-row"><div class="tool-ico">&#128272;</div><span class="badge-live">Live</span></div>
-        <h3>Privacy Risk Check</h3>
-        <p class="plain-name">For businesses that handle people's personal data</p>
-        <p>Answer simple questions about how your business uses data. We will tell you if there are any risks, what to fix, and give you a written report you can show investors, partners, or regulators.</p>
-        <a class="launch" href="dpia">Start Privacy Risk Check &rarr;</a>
+    <aside class="workflow-panel" aria-label="Workflow map">
+      <h2>The flow in plain language</h2>
+      <p class="fine" style="margin:0">The DPIA process is not just a form. It is a decision trail: facts, legal basis, necessity, risk, safeguards, DPO advice, and final decision.</p>
+      <div class="flow-map">
+        <div class="flow-step"><span class="num">01</span><div><strong>Screen</strong><span>Check whether Art. 35 DPIA triggers apply.</span></div></div>
+        <div class="flow-step"><span class="num">02</span><div><strong>Describe</strong><span>Map purpose, data, systems, vendors, transfers, and people affected.</span></div></div>
+        <div class="flow-step"><span class="num">03</span><div><strong>Challenge</strong><span>Ask whether the processing is necessary, fair, proportionate, and less intrusive.</span></div></div>
+        <div class="flow-step"><span class="num">04</span><div><strong>Reduce risk</strong><span>Identify harms, safeguards, action owners, and remaining risk.</span></div></div>
+        <div class="flow-step"><span class="num">05</span><div><strong>Decide</strong><span>Record DPO advice, sign-off, conditions, or supervisory authority consultation.</span></div></div>
       </div>
-      <div class="tool-card china">
-        <div class="top-row"><div class="tool-ico china">&#128737;&#65039;</div><span class="badge-region">&#127464;&#127475; China &middot; Live</span></div>
-        <h3>China PIPIA Assessment</h3>
-        <p class="plain-name">For businesses handling data of people in China</p>
-        <p>A bilingual (English / Chinese) Personal Information Protection Impact Assessment built for China's PIPL law. Guided modules, auto data classification, and an exportable report &mdash; everything you need to stay compliant in China.</p>
-        <a class="launch" href="https://legalaipay.com/pipia">Start China PIPIA &rarr;</a>
-      </div>
-      <div class="tool-card">
-        <div class="top-row"><div class="tool-ico">&#128680;</div><span class="badge-live">Live</span></div>
-        <h3>Incident Response Guide</h3>
-        <p class="plain-name">For when a data breach or security incident happens</p>
-        <p>Got hacked, lost a laptop, or had a system breach? This tool walks you through the legal steps you must take &mdash; who to notify, what to say, and by when &mdash; in plain English.</p>
-        <a class="launch" href="breach">Start Incident Report &rarr;</a>
-      </div>
-      <div class="tool-card">
-        <div class="top-row"><div class="tool-ico">&#128203;</div><span class="badge-live">Live</span></div>
-        <h3>Supplier Data Agreement</h3>
-        <p class="plain-name">For businesses using cloud tools or third-party services</p>
-        <p>Every tool you use that touches customer data (payment processors, email platforms, CRMs) needs a formal agreement. This generator creates one for you in minutes.</p>
-        <a class="launch" href="dpa">Create Supplier Agreement &rarr;</a>
-      </div>
-      <div class="tool-card">
-        <div class="top-row"><div class="tool-ico">&#128196;</div><span class="badge-live">Live</span></div>
-        <h3>NDA &amp; Contract Review</h3>
-        <p class="plain-name">For before signing any business agreement</p>
-        <p>Paste in any NDA or contract and our AI highlights the risky parts in plain language: one-sided terms, missing clauses, or anything that could hurt you later.</p>
-        <a class="launch" href="nda">Review an NDA &rarr;</a>
-      </div>
-      <div class="tool-card">
-        <div class="top-row"><div class="tool-ico">&#127758;</div><span class="badge-live">Live</span></div>
-        <h3>Cross-Border Data Check</h3>
-        <p class="plain-name">For businesses sending data between countries</p>
-        <p>Tell us which countries your business sends data to and from &mdash; including China. We will tell you what rules apply, what agreements you need, and give you a simple checklist to follow.</p>
-        <a class="launch" href="transfer">Check Data Transfers &rarr;</a>
-      </div>
-      <div class="tool-card">
-        <div class="top-row"><div class="tool-ico">&#128221;</div><span class="badge-live">Live</span></div>
-        <h3>Business Contract Review</h3>
-        <p class="plain-name">For reviewing vendor, client, and partner contracts</p>
-        <p>Before you sign any contract with a client, vendor, or partner, run it through this tool. It explains each section in plain language and flags anything unusual or risky.</p>
-        <a class="launch" href="contract">Review a Contract &rarr;</a>
-      </div>
-    </div>
-  </div>
-</section>
+    </aside>
+  </section>
 
-<section class="audience">
-  <div class="container">
-    <p class="section-label" style="color:#7aa6ff">Who It's Built For</p>
-    <h2 class="section-title" style="color:#fff">Built for leaders who wear many hats</h2>
-    <p class="section-sub" style="color:#c0cce0">You run the business, manage the team, and close the deals. Legal compliance should not need a full-time lawyer.</p>
-    <div class="aud-grid">
-      <div class="aud-card">
-        <div class="icon">&#127968;</div>
-        <h4>US CEO selling into Europe</h4>
-        <p>You sell to customers in Germany, France, or the UK. European privacy law applies to you &mdash; even if your company is incorporated in Delaware. We make compliance simple.</p>
+  <div class="bands">
+    <section class="band" aria-labelledby="before-start">
+      <div class="band-head">
+        <div>
+          <h2 id="before-start">Before you start a DPIA</h2>
+          <p>Gather the minimum evidence first, otherwise the form feels abstract and the output will not be decision-ready.</p>
+        </div>
+        <a class="btn text" href="dpia.html?mode=trigger">Start screening</a>
       </div>
-      <div class="aud-card">
-        <div class="icon">&#127979;</div>
-        <h4>European founder with US operations</h4>
-        <p>You are based in London, Paris, or Berlin but you have US customers, partners, or cloud tools. Cross-border data rules apply. We handle it step by step.</p>
+      <div class="prep-grid">
+        <div class="prep"><strong>Processing facts</strong><ul><li>Business purpose and owner</li><li>Systems and vendors</li><li>Categories of personal data</li></ul></div>
+        <div class="prep"><strong>Legal and privacy inputs</strong><ul><li>Art. 6 lawful basis</li><li>Art. 9 basis, if sensitive data exists</li><li>Privacy notice and rights process</li></ul></div>
+        <div class="prep"><strong>Risk evidence</strong><ul><li>Data flow or architecture sketch</li><li>Security controls and access rules</li><li>Known harms and mitigation owners</li></ul></div>
       </div>
-      <div class="aud-card">
-        <div class="icon">&#127464;&#127475;</div>
-        <h4>Doing business in or with China</h4>
-        <p>You sell to, source from, or operate in China. China's PIPL has strict rules on personal data and cross-border transfers. Our bilingual PIPIA tool keeps you compliant.</p>
-      </div>
-      <div class="aud-card">
-        <div class="icon">&#127758;</div>
-        <h4>Global SME with remote teams</h4>
-        <p>Your team is spread across continents, your suppliers are global, and your customers are everywhere. Managing legal compliance across borders just got a lot easier.</p>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<section class="why-section" id="why">
-  <div class="container">
-    <p class="section-label">Why LegalAIPay</p>
-    <h2 class="section-title">Legal protection, finally built for business people</h2>
-    <p class="section-sub">Not for lawyers. Not for IT teams. For founders and CEOs who need to protect their business without getting lost in legal documents.</p>
-    <div class="why-grid">
-      <div class="why-card"><div class="ico">&#128274;</div><h4>100% Private</h4><p>Everything runs inside your browser. No data is ever uploaded or sent to a server. Your confidential business information stays yours.</p></div>
-      <div class="why-card"><div class="ico">&#128218;</div><h4>No Jargon</h4><p>Forget "Article 35," "Standard Contractual Clauses," and "PIPIA." Every step uses plain business language that any CEO can understand and act on.</p></div>
-      <div class="why-card"><div class="ico">&#127758;</div><h4>EU, US &amp; China Covered</h4><p>GDPR, US privacy laws (CCPA), and China's PIPL &mdash; we cover the key regulations that matter most to small businesses operating across these major markets.</p></div>
-      <div class="why-card"><div class="ico">&#9889;</div><h4>Fast &amp; Actionable</h4><p>No lengthy setup. No account needed. Open a tool, answer a few business questions, and get a clear action plan you can use today.</p></div>
-    </div>
-  </div>
-</section>
+    <section class="band" aria-labelledby="edpb-map">
+      <div class="band-head">
+        <div>
+          <h2 id="edpb-map">How the DPIA flow maps to the EDPB structure</h2>
+          <p>The tool uses business language, but the checkpoints follow the EDPB logic: description, legal analysis, necessity, risk, consultation, and final decision.</p>
+        </div>
+      </div>
+      <div class="mapping">
+        <div class="map-block"><h3>1. Context and scope</h3><p>Controller, DPO, processing owner, systems, project stage, and why the assessment is being done.</p></div>
+        <div class="map-block"><h3>2. Systematic description</h3><p>Purpose, data categories, data subjects, recipients, transfers, lifecycle, and linked agreements.</p></div>
+        <div class="map-block"><h3>3. Compliance analysis</h3><p>Lawful basis, special category basis, retention, transparency, rights, and data protection by design.</p></div>
+        <div class="map-block"><h3>4. Necessity and proportionality</h3><p>Whether the same objective can be reached with less data, less tracking, or less intrusive means.</p></div>
+        <div class="map-block"><h3>5. Risk and safeguards</h3><p>Possible harms to people, likelihood, severity, mitigation plan, residual risk, and action owners.</p></div>
+        <div class="map-block"><h3>6. DPO advice and decision</h3><p>DPO opinion, views of data subjects where appropriate, sign-off, conditions, or regulator consultation.</p></div>
+      </div>
+    </section>
 
-<section class="cta-banner">
-  <div class="container">
-    <h2>Ready to protect your global business?</h2>
-    <p>Start with Step 1 &mdash; it takes less than 10 minutes and you will immediately know where you stand legally in the EU, the US, and China.</p>
-    <a class="btn btn-primary" style="font-size:16px;padding:14px 28px;margin:0 8px" href="#how-it-works">Follow the Step-by-Step Guide</a>
-    <a class="btn btn-light" style="font-size:16px;padding:14px 28px;margin:0 8px" href="dashboard">Open Compliance Hub</a>
+    <section class="band" aria-labelledby="tools">
+      <div class="band-head">
+        <div>
+          <h2 id="tools">Other GDPR workstreams</h2>
+          <p>Use these when the facts show a vendor, transfer, breach, contract, or NDA issue. They should feed evidence back into the DPIA record.</p>
+        </div>
+      </div>
+      <div class="tools">
+        <div class="tool-card"><h3>DPA</h3><p>Controller-processor agreement for vendor processing.</p><a href="dpa.html">Open DPA tool</a></div>
+        <div class="tool-card"><h3>Transfer</h3><p>Chapter V assessment for international data transfers.</p><a href="transfer.html">Open transfer tool</a></div>
+        <div class="tool-card"><h3>Breach</h3><p>Incident record and GDPR Art. 33/34 notification analysis.</p><a href="breach.html">Open breach tool</a></div>
+        <div class="tool-card"><h3>Contracts</h3><p>Review privacy, confidentiality, and vendor clauses before signing.</p><a href="contract.html">Open contract tool</a></div>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="outputs">
+      <div class="band-head">
+        <div>
+          <h2 id="outputs">Expected outputs</h2>
+          <p>A good DPIA kit should produce a record you can review, challenge, approve, and update when the processing changes.</p>
+        </div>
+      </div>
+      <div class="outputs">
+        <div class="output-card"><h3>DPIA record</h3><p>Facts, legal basis, data flow, necessity, safeguards, and risks.</p></div>
+        <div class="output-card"><h3>DPO summary</h3><p>Advice, unresolved concerns, and whether consultation is needed.</p></div>
+        <div class="output-card"><h3>Action plan</h3><p>Mitigations, owners, deadlines, and residual-risk conditions.</p></div>
+        <div class="output-card"><h3>Decision log</h3><p>Proceed, proceed with conditions, redesign, consult, or stop.</p></div>
+      </div>
+    </section>
   </div>
-</section>
+</main>
 
 <footer>
-  <div class="container">
-    <div class="foot-grid">
-      <div class="foot-brand">
-        <div class="logo" style="margin-bottom:14px">L</div>
-        <p>LegalAIPay gives global small business owners simple, private, and actionable legal protection tools across the EU, the US, and China &mdash; no lawyer required.</p>
-      </div>
-      <div class="foot-col">
-        <h5>Tools</h5>
-        <a href="dpia">Privacy Risk Check</a>
-        <a href="https://legalaipay.com/pipia">China PIPIA Assessment</a>
-        <a href="breach">Incident Response</a>
-        <a href="dpa">Supplier Agreement</a>
-        <a href="nda">NDA Review</a>
-        <a href="transfer">Cross-Border Check</a>
-        <a href="contract">Contract Review</a>
-      </div>
-      <div class="foot-col">
-        <h5>Platform</h5>
-        <a href="dashboard">Compliance Hub</a>
-        <a href="https://legalaipay.com">LegalAIPay Home</a>
-        <a href="#how-it-works">How It Works</a>
-      </div>
-      <div class="foot-col">
-        <h5>Legal</h5>
-        <a href="https://legalaipay.com/privacy">Privacy Policy</a>
-        <a href="https://legalaipay.com/terms">Terms of Use</a>
-      </div>
-    </div>
-    <div class="foot-bottom">
-      <span>&copy; 2026 LegalAIPay. All rights reserved.</span>
-      <span>Tools run entirely in your browser &mdash; no data sent to any server.</span>
-    </div>
+  <div class="wrap">
+    <span>&copy; 2026 LegalAIPay. Browser-based GDPR working records.</span>
+    <span>Keep high-risk or regulator-facing decisions under DPO/counsel review.</span>
   </div>
 </footer>
-
 </body>
 </html>
